@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
+import CardComponent from './cardComponent';
 
 class PlayerHomePage extends Component {
     constructor(props) {
@@ -10,8 +11,7 @@ class PlayerHomePage extends Component {
             name: "",
             class: "",
             tel: "",
-            listGames: [],
-            pressedButton: ""
+            listGames: []
         };
         this._mounted = false;
     }
@@ -64,25 +64,6 @@ class PlayerHomePage extends Component {
         this._mounted = true;
     }
 
-    handleOutGameRoom = () => {
-        document.getElementById('noti').innerHTML = "You left the game room";
-        document.getElementById('outRoomButton').style.display = "none";
-        var connectionOptions = {
-            "force new connection": true,
-            "reconnectionAttempts": "Infinity",
-            "timeout": 10000,
-            "transports": ["websocket"]
-        };
-        var socket = io.connect('https://insa-challenge.azurewebsites.net', connectionOptions);
-        const sentData = { roomId: this.state.pressedButton, player: { _id: this.state._id } };
-        socket.emit('out room', sentData, () => {
-            console.log("Leave success");
-        });
-        this.setState({
-            pressedButton: ""
-        });
-    }
-
     handleLogOut() {
         axios.get('/api/logout');
         window.location = '/';
@@ -97,35 +78,10 @@ class PlayerHomePage extends Component {
                 <div id="main">
                     <h2>Hello <span id="namePlayer"></span></h2>
                     <h2>List of game rooms</h2>
-                    <ul id="listGames">
-                        {
-                            this.state.listGames.map((game, i) =>
-                                <li><button onClick={() => {
-                                    this.setState({
-                                        pressedButton: game._id
-                                    });
-                                    const params = new URLSearchParams(this.props.location.search);
-                                    const idPlayer = params.get("id");
-                                    const sentData = { roomId: game._id, player: { _id: idPlayer } };
-                                    var connectionOptions = {
-                                        "force new connection": true,
-                                        "reconnectionAttempts": "Infinity",
-                                        "timeout": 10000,
-                                        "transports": ["websocket"]
-                                    };
-                                    var socket = io.connect('https://insa-challenge.azurewebsites.net', connectionOptions);
-                                    socket.emit('join', sentData, () => {
-                                        console.log("Join success");
-                                    });
-                                    document.getElementById("noti").innerHTML = "You joined the game room";
-                                    document.getElementById("outRoomButton").style.display = "block";
-                                }
-                                }> {game.name} </button></li>
-                            )
-                        }
-                    </ul>
                     <span id="noti"></span><br />
-                    <button id="outRoomButton" style={{ display: "none" }} onClick={this.handleOutGameRoom}>Out game room</button><br />
+                    {
+                        this.state.listGames.map((game, i) => <CardComponent idPlayer={this.state._id} idRoom={game._id} />)
+                    }
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
 
 
