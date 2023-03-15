@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import io from 'socket.io-client';
+import { io } from 'socket.io-client';
 import CardComponent from './cardComponent';
 
 class PlayerHomePage extends Component {
@@ -13,6 +13,10 @@ class PlayerHomePage extends Component {
             tel: "",
             listGames: []
         };
+        var connectionOptions = {
+            transports: ["websocket", "polling"]
+        };
+        this.socket = io('http://localhost:8080/player', connectionOptions);
         this._mounted = false;
     }
 
@@ -20,13 +24,7 @@ class PlayerHomePage extends Component {
         if (this._mounted) return;
         const params = new URLSearchParams(this.props.location.search);
         const idPlayer = params.get("id");
-        var connectionOptions = {
-            "force new connection": true,
-            "reconnectionAttempts": "Infinity",
-            "timeout": 10000,
-            "transports": ["websocket"]
-        };
-        var socket = io.connect('https://insa-challenge.azurewebsites.net', connectionOptions);
+
         axios.get(`/api/player/${idPlayer}`)
             .then(response => response.data)
             .then(data => {
@@ -38,7 +36,7 @@ class PlayerHomePage extends Component {
                 });
                 document.getElementById("namePlayer").innerHTML = data.name;
                 const sentData = { _id: data._id, name: data.name, class: data.class, tel_number: data.tel_number };
-                socket.emit('sign in', sentData, (res) => {
+                this.socket.emit('sign in', sentData, (res) => {
                     if (res) console.log(res);
                 });
             })
@@ -64,7 +62,8 @@ class PlayerHomePage extends Component {
         this._mounted = true;
     }
 
-    handleLogOut() {
+    handleLogOut = () => {
+        this.socket.emit("client log out");
         axios.get('/api/logout');
         window.location = '/';
     }
@@ -80,7 +79,7 @@ class PlayerHomePage extends Component {
                     <h2>List of game rooms</h2>
                     <span id="noti"></span><br />
                     {
-                        this.state.listGames.map((game, i) => <CardComponent idPlayer={this.state._id} idRoom={game._id} />)
+                        this.state.listGames.map((game, i) => <CardComponent idPlayer={this.state._id} idRoom={game._id} socket={this.socket} />)
                     }
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
 

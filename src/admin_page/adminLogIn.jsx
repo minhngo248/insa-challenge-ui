@@ -19,7 +19,7 @@ class AdminLogIn extends Component {
             if (data.result === null) {
                 document.getElementById("failedSignIn").innerHTML = "Wrong log in info";
             } else {
-                window.location = '/admin-page';
+                window.location = `/admin-page?id=${data.result._id}`;
             }
         })
     }

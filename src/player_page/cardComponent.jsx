@@ -1,6 +1,5 @@
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
-import io from 'socket.io-client';
 import axios from 'axios';
 import React, { Component } from 'react';
 
@@ -16,6 +15,7 @@ class CardComponent extends Component {
             maxPlayers: 0,
             linkImg: ''
         };
+        this.socket = this.props.socket;
         this._mouted = false;
     }
 
@@ -27,7 +27,7 @@ class CardComponent extends Component {
                 this.setState({
                     nameRoom: data.name,
                     location: data.location,
-                    nbPlayer: data.listPlayers.length,
+                    nbPlayerIn: data.listPlayers.length,
                     maxPlayers: data.maxPlayers,
                     linkImg: data.linkImg
                 });
@@ -38,22 +38,44 @@ class CardComponent extends Component {
         this._mouted = true;
     }
 
+    async componentDidUpdate() {
+        // update data when each change happens
+        await this.socket.on("update data", async () => {
+            console.log("AAA updated");
+            await axios.get(`/api/gamerooms/${this.state.idRoom}`)
+                .then(response => response.data)
+                .then(data => {
+                    this.setState({
+                        nbPlayerIn: data.listPlayers.length
+                    });
+                })
+                .catch(err => {
+                    console.log("Error while HTTP get this game room " + err);
+                });
+        });
+    }
+
     handleOutGameRoom = () => {
         document.getElementById('noti').innerHTML = "You left the game room";
         document.getElementById(`outRoomButton${this.state.nameRoom}`).style.display = "none";
         for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
             document.getElementsByClassName("inGameButton").item(i).disabled = false;
         }
-        var connectionOptions = {
-            "force new connection": true,
-            "reconnectionAttempts": "Infinity",
-            "timeout": 10000,
-            "transports": ["websocket"]
-        };
-        var socket = io.connect('https://insa-challenge.azurewebsites.net', connectionOptions);
         const sentData = { roomId: this.state.idRoom, player: { _id: this.state.idPlayer } };
-        socket.emit('out room', sentData, () => {
+        this.socket.emit('out room', sentData, () => {
             console.log("Leave success");
+        });
+
+        // charge data for this component
+        axios.get(`/api/gamerooms/${this.state.idRoom}`)
+        .then(response => response.data)
+        .then(data => {
+            this.setState({
+                nbPlayerIn: data.listPlayers.length
+            });
+        })
+        .catch(err => {
+            console.log("Error while HTTP get this game room " + err);
         });
     }
 
@@ -71,15 +93,20 @@ class CardComponent extends Component {
                         </Card.Text>
 
                         <Button className="inGameButton" disabled={false} variant="primary" onClick={() => {
+                            // charge data for this component
+                            axios.get(`/api/gamerooms/${this.state.idRoom}`)
+                                .then(response => response.data)
+                                .then(data => {
+                                    this.setState({
+                                        nbPlayerIn: data.listPlayers.length
+                                    });
+                                })
+                                .catch(err => {
+                                    console.log("Error while HTTP get this game room " + err);
+                                });
+
                             const sentData = { roomId: this.state.idRoom, player: { _id: this.state.idPlayer } };
-                            var connectionOptions = {
-                                "force new connection": true,
-                                "reconnectionAttempts": "Infinity",
-                                "timeout": 10000,
-                                "transports": ["websocket"]
-                            };
-                            var socket = io.connect('https://insa-challenge.azurewebsites.net', connectionOptions);
-                            socket.emit('join', sentData, (res, err) => {
+                            this.socket.emit('join', sentData, (res, err) => {
                                 if (res) {
                                     document.getElementById("noti").innerHTML = `You joined the game room ${this.state.nameRoom}`;
                                     document.getElementById(`outRoomButton${this.state.nameRoom}`).style.display = "block";
