@@ -16,7 +16,7 @@ class PlayerHomePage extends Component {
         var connectionOptions = {
             transports: ["websocket", "polling"]
         };
-        this.socket = io('http://localhost:8080/player', connectionOptions);
+        this.socket = io('https://insa-challenge.azurewebsites.net/player', connectionOptions);
         this._mounted = false;
     }
 
