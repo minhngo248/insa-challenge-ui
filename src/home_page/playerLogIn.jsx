@@ -14,9 +14,11 @@ class PlayerLogIn extends Component {
         })
         .then((response) => response.data)
         .then((data) => {
+            console.log(data);
             if (data.result === null) {
                 document.getElementById("noPlayer").innerHTML = "No player";
             } else {
+                console.log(data.result);
                 window.location = `/player-page?id=${data.result._id}`;
             }
         })

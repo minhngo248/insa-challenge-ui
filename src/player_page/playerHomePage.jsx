@@ -14,9 +14,10 @@ class PlayerHomePage extends Component {
             listGames: []
         };
         var connectionOptions = {
-            transports: ["websocket", "polling"]
+            withCredentials: true,
+            transports: ["polling"]
         };
-        this.socket = io('https://insa-challenge.azurewebsites.net/player', connectionOptions);
+        this.socket = io('http://localhost:8080', connectionOptions);
         this._mounted = false;
     }
 
@@ -64,7 +65,7 @@ class PlayerHomePage extends Component {
 
     handleLogOut = () => {
         this.socket.emit("client log out");
-        axios.get('/api/logout');
+        axios.get('/api/logout/player');
         window.location = '/';
     }
 
