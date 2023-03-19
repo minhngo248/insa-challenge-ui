@@ -3,7 +3,14 @@ import NavBar from '../navBar';
 import axios from 'axios';
 
 class PlayerLogIn extends Component {
-    state = {  } 
+    constructor(props) {  
+        super(props);
+        this.state = { 
+            idPlayer: null,
+            idSubmitted: false
+         };
+    }  
+    
 
     handleValiderButton = () => {
         const telephone = document.getElementById('telephone').value;
@@ -15,11 +22,14 @@ class PlayerLogIn extends Component {
         .then((response) => response.data)
         .then((data) => {
             console.log(data);
-            if (data.result === null) {
-                document.getElementById("noPlayer").innerHTML = "No player";
+            if (data.result !== null) {
+                this.setState({
+                    idPlayer: data.result._id,
+                    idSubmitted: true
+                });
+                window.open(`/player-page?id=${data.result._id}`);
             } else {
-                console.log(data.result);
-                window.location = `/player-page?id=${data.result._id}`;
+                document.getElementById("no-player").innerHTML = "No player with this telephone number";
             }
         })
     }
@@ -38,8 +48,8 @@ class PlayerLogIn extends Component {
                         <label>Telephone</label><br/>
                         <input type={'text'} placeholder='00 00 00 00 00' id="telephone"/>
                     </form>
-                    <button type='button' id='validerButton' onClick={this.handleValiderButton}>Valider</button>
-                    <div id="noPlayer"></div>
+                    <button type='button' id='validerButton' onClick={this.handleValiderButton}>Valider</button><br/>
+                    <span id="no-player"></span>
                 </div>
             </React.Fragment>
         );
