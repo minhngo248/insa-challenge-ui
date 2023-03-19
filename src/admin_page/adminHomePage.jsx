@@ -15,7 +15,7 @@ class AdminHomePage extends Component {
             withCredentials: true,
             transports: ["polling"]
         };
-        this.socket = io('http://localhost:8080', connectionOptions);
+        this.socket = io('https://insa-challenge.azurewebsites.net', connectionOptions);
         this._mounted = false;
     }
 
