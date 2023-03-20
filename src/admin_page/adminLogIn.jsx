@@ -11,7 +11,7 @@ class AdminLogIn extends Component {
         const password = document.getElementById('password').value;
         axios.post('/api/admin', {"username": username, "password": password}, {
             headers: {
-                "Content-type": "application/json"
+                "Content-Type": "application/json"
             }
         })
         .then((response) => response.data)
@@ -20,7 +20,7 @@ class AdminLogIn extends Component {
                 document.getElementById("failedSignIn").innerHTML = "Wrong log in info";
             } else {
                 console.log(data.result);
-                window.location = `/admin-page?id=${data.result._id}`;
+                window.location.href = `/admin-page?id=${data.result._id}`;
             }
         })
     }

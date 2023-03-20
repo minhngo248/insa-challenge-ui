@@ -16,7 +16,7 @@ class PlayerLogIn extends Component {
         const telephone = document.getElementById('telephone').value;
         axios.post('/api/player', {"telephone": telephone}, {
             headers: {
-                "Content-type": "application/json"
+                "Content-Type": "application/json"
             }
         })
         .then((response) => response.data)
@@ -27,7 +27,7 @@ class PlayerLogIn extends Component {
                     idPlayer: data.result._id,
                     idSubmitted: true
                 });
-                window.open(`/player-page?id=${data.result._id}`);
+                window.location.href = `/player-page?id=${data.result._id}`;
             } else {
                 document.getElementById("no-player").innerHTML = "No player with this telephone number";
             }
