@@ -1,41 +1,38 @@
 import React, { Component } from 'react';
 import NavBar from '../navBar';
-import axios from 'axios';
+import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
+import db from '../firebase';
 
 class PlayerLogIn extends Component {
-    constructor(props) {  
+    constructor(props) {
         super(props);
-        this.state = { 
-            idPlayer: null,
-            idSubmitted: false
-         };
-    }  
-    
-
-    handleValiderButton = () => {
-        const telephone = document.getElementById('telephone').value;
-        axios.post('/api/player', {"telephone": telephone}, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-        .then((response) => response.data)
-        .then((data) => {
-            console.log(data);
-            if (data.result !== null) {
-                this.setState({
-                    idPlayer: data.result._id,
-                    idSubmitted: true
-                });
-                window.location.href = `/player-page?id=${data.result._id}`;
-            } else {
-                document.getElementById("no-player").innerHTML = "No player with this telephone number";
-            }
-        })
+        this.state = {
+        };
     }
 
 
-    render() { 
+    handleValiderButton = async () => {
+        const telephone = document.getElementById('telephone').value;
+        const q = query(collection(db, "players"), where("tel_number", "==", telephone));
+        
+        const querySnapshot = await getDocs(q);
+        var isSignedIn = false;
+        querySnapshot.forEach(async (doc_query) => {
+            const playerRef = doc(db, "players", doc_query.id);
+            // Set the "capital" field of the city 'DC'
+            await updateDoc(playerRef, {
+                online: true
+            });
+            window.location.href = `/player-page?id=${doc_query.id}`;
+            isSignedIn = true;
+        });
+        if (!isSignedIn) {
+            document.getElementById('no-player').innerHTML = 'Aucun joueur ne correspond à ce numéro de téléphone';
+        }
+    }
+
+
+    render() {
         return (
             <React.Fragment>
                 <div id="header">
@@ -45,15 +42,15 @@ class PlayerLogIn extends Component {
                 <div id="main">
                     <h2>Player</h2>
                     <form>
-                        <label>Telephone</label><br/>
-                        <input type={'text'} placeholder='00 00 00 00 00' id="telephone"/>
+                        <label>Telephone</label><br />
+                        <input type={'text'} placeholder='00 00 00 00 00' id="telephone" />
                     </form>
-                    <button type='button' id='validerButton' onClick={this.handleValiderButton}>Valider</button><br/>
+                    <button type='button' id='validerButton' onClick={this.handleValiderButton}>Valider</button><br />
                     <span id="no-player"></span>
                 </div>
             </React.Fragment>
         );
     }
 }
- 
+
 export default PlayerLogIn;

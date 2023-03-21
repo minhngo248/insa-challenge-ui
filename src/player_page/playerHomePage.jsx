@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import axios from 'axios';
-import { io } from 'socket.io-client';
 import CardComponent from './cardComponent';
+import { doc, updateDoc, onSnapshot, collection, query, getDoc } from "firebase/firestore";
+import db from '../firebase';
 
 class PlayerHomePage extends Component {
     constructor(props) {
@@ -11,76 +11,77 @@ class PlayerHomePage extends Component {
             name: "",
             class: "",
             tel: "",
-            listGames: []
+            isAuthentificated: false,
+            listIdGames: [],
+            actualGame: null
         };
-        var connectionOptions = {
-            withCredentials: true,
-            transports: ["polling"]
-        };
-        this.socket = io('https://insa-challenge.azurewebsites.net', connectionOptions);
-        this._mounted = false;
     }
 
     componentDidMount() {
-        if (this._mounted) return;
         const params = new URLSearchParams(this.props.location.search);
         const idPlayer = params.get("id");
 
-        axios.get(`/api/player/${idPlayer}`)
-            .then(response => response.data)
-            .then(data => {
-                this.setState({
-                    _id: data._id,
-                    name: data.name,
-                    class: data.class,
-                    tel: data.tel_number
-                });
-                document.getElementById("namePlayer").innerHTML = data.name;
-                const sentData = { _id: data._id, name: data.name, class: data.class, tel_number: data.tel_number };
-                this.socket.emit('sign in', sentData, (res) => {
-                    if (res) console.log(res);
-                });
-            })
-            .catch(err => {
-                console.log("Error while HTTP get this player " + err);
+        const playerRef = doc(db, "players", idPlayer);
+        onSnapshot(playerRef, (doc) => {
+            this.setState({
+                _id: doc.id,
+                name: doc.data().name,
+                class: doc.data().class,
+                tel: doc.data().tel_number,
+                isAuthentificated: doc.data().online,
+                actualGame: doc.data().gameRoom
             });
-
-        axios.get(`/api/gamerooms`)
-            .then(response => response.data)
-            .then(data => {
-                var listG = [];
-                data.forEach((d) => {
-                    listG.push({ _id: d._id, name: d.name });
+        });
+        
+        const q = query(collection(db, "gamerooms"));
+        onSnapshot(q, (querySnapshot) => {
+            var listGameRooms = [];
+            querySnapshot.forEach((doc) => {
+                listGameRooms.push({
+                    _id: doc.id
                 });
-                this.setState({
-                    listGames: listG
-                });
-            })
-            .catch(err => {
-                console.log("Error while HTTP get all game rooms " + err);
             });
-
-        this._mounted = true;
+            this.setState({
+                listIdGames: listGameRooms
+            });
+        });
     }
 
-    handleLogOut = () => {
-        this.socket.emit("player log out");
-        axios.get('/api/logout/player');
+    handleLogOut = async () => {
+        const playerRef = doc(db, "players", this.state._id);
+        const playerSnap = await getDoc(playerRef);
+        if (playerSnap.data().gameRoom !== null) {
+            const gameRoomRef = doc(db, "gamerooms", playerSnap.data().gameRoom.id);
+            const gameRoomSnap = await getDoc(gameRoomRef);
+            var listPlayersInRoom = gameRoomSnap.data().listPlayers;
+            listPlayersInRoom = listPlayersInRoom.filter(playerId => playerId !== playerSnap.id);
+            await updateDoc(gameRoomRef, {
+                listPlayers: listPlayersInRoom
+            });
+            await updateDoc(playerRef, {
+                gameRoom: null
+            });
+        }
+        // Set the "online" field of the current player to false
+        await updateDoc(playerRef, {
+            online: false
+        });
         window.location = '/';
     }
 
     render() {
+        if (!this.state.isAuthentificated) return (<h1>Not found</h1>);
         return (
             <React.Fragment>
                 <div id="header">
 
                 </div>
                 <div id="main">
-                    <h2>Hello <span id="namePlayer"></span></h2>
+                    <h2>Hello {this.state.name}</h2>
                     <h2>List of game rooms</h2>
                     <span id="noti"></span><br />
                     {
-                        this.state.listGames.map((game, i) => <CardComponent idPlayer={this.state._id} idRoom={game._id} socket={this.socket} />)
+                        this.state.listIdGames.map((game, i) => <CardComponent key={game._id} idPlayer={this.state._id} idRoom={game._id} actualGame={this.state.actualGame} />)
                     }
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
 

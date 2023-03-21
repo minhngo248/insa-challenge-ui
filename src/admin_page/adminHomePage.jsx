@@ -1,123 +1,61 @@
-import axios from 'axios';
 import React, { Component } from 'react';
 import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap';
-import { io } from 'socket.io-client';
+import { doc, onSnapshot, collection, query, updateDoc } from "firebase/firestore";
+import db from '../firebase';
 
 class AdminHomePage extends Component {
     constructor(props) {
         super(props);
         this.state = {
             idAdmin: '',
-            tabContent: []
+            listPlayers: [],
+            isAuthentificated: false
         };
-        var connectionOptions = {
-            withCredentials: true,
-            transports: ["polling"]
-        };
-        this.socket = io('https://insa-challenge.azurewebsites.net', connectionOptions);
-        this._mounted = false;
     }
 
     componentDidMount() {
-        if (this._mounted) return;
         const params = new URLSearchParams(this.props.location.search);
         const idAdmin = params.get("id");
-        axios.get(`/api/admin/${idAdmin}`)
-            .then(response => response.data)
-            .then(data => {
-                this.setState({
-                    idAdmin: data._id
-                });
-                this.socket.emit('big admin sign in', () => {
-                    console.log("Admin signed in successfully");
-                });
-            })
-            .catch(err => {
-                console.log("error while parsing admin page " + err);
-            })
 
-        axios.get('/api/players')
-            .then(response => response.data)
-            .then(data => {
-                var tabBody = document.getElementById('tab-body');
-                data.map((player, i) => {
-                    var trElem = document.createElement('tr');
-                    var orderElem = document.createElement('td');
-                    orderElem.innerHTML = i + 1;
-                    trElem.append(orderElem);
-                    var nameElem = document.createElement('td');
-                    nameElem.innerHTML = player.name;
-                    trElem.append(nameElem);
-                    var onlineElem = document.createElement('td');
-                    onlineElem.innerHTML = player.online;
-                    trElem.append(onlineElem);
-                    var scoreElem = document.createElement('td');
-                    scoreElem.innerHTML = player.score;
-                    trElem.append(scoreElem);
-                    var gameRoomElem = document.createElement('td');
-                    if (player.gameRoom !== null) {
-                        gameRoomElem.innerHTML = player.gameRoom.name;
-                    }
-                    trElem.append(gameRoomElem);
-                    tabBody.append(trElem);
-                });
-                this.setState({
-                    tabContent: data
+        const adminRef = doc(db, "admins", idAdmin);
+        onSnapshot(adminRef, (doc) => {
+            this.setState({
+                idAdmin: doc.id,
+                isAuthentificated: doc.data().online
+            });
+        });
+
+        const q = query(collection(db, "players"));
+        onSnapshot(q, (querySnapshot) => {
+            var listAllPlayers = [];
+            querySnapshot.forEach((doc) => {
+                listAllPlayers.push({
+                    _id: doc.id,
+                    name: doc.data().name,
+                    online: doc.data().online,
+                    score: doc.data().score,
+                    gameRoom: doc.data().gameRoom
                 });
             });
-        this._mounted = true;
-    }
 
-    componentDidUpdate() {
-        this.socket.on("update data", async () => {
-            console.log("AAA updated");
-            await axios.get('/api/players')
-                .then(response => response.data)
-                .then(data => {
-                    if (JSON.stringify(data) !== JSON.stringify(this.state.tabContent)) {
-                        var tabB = document.getElementById('tab-body');
-                        tabB.remove();
-                        var tabBody = document.createElement("tbody");
-                        tabBody.id = "tab-body";
-                        data.map((player, i) => {
-                            var trElem = document.createElement('tr');
-                            var orderElem = document.createElement('td');
-                            orderElem.innerHTML = i + 1;
-                            trElem.append(orderElem);
-                            var nameElem = document.createElement('td');
-                            nameElem.innerHTML = player.name;
-                            trElem.append(nameElem);
-                            var onlineElem = document.createElement('td');
-                            onlineElem.innerHTML = player.online;
-                            trElem.append(onlineElem);
-                            var scoreElem = document.createElement('td');
-                            scoreElem.innerHTML = player.score;
-                            trElem.append(scoreElem);
-                            var gameRoomElem = document.createElement('td');
-                            if (player.gameRoom !== null) {
-                                gameRoomElem.innerHTML = player.gameRoom.name;
-                            }
-                            trElem.append(gameRoomElem);
-                            tabBody.append(trElem);
-                        });
-                        var tab = document.getElementById('tab');
-                        tab.append(tabBody);
-                        this.setState({
-                            tabContent: data
-                        });
-                    }
-                });
+            this.setState({
+                listPlayers: listAllPlayers
+            });
         });
     }
 
-    handleLogOut = () => {
-        axios.get("/api/logout/admin");
-        this.socket.emit("big admin log out");
+    handleLogOut = async () => {
+        const adminRef = doc(db, "admins", this.state.idAdmin);
+        // set online to false
+        await updateDoc(adminRef, {
+            online: false
+        });
         window.location = '/';
     }
 
     render() {
+        if (!this.state.isAuthentificated) return (<h1>Not found</h1>);
         return (
             <React.Fragment>
                 <div id="main">
@@ -134,6 +72,19 @@ class AdminHomePage extends Component {
                             </tr>
                         </thead>
                         <tbody id="tab-body">
+                            {
+                                this.state.listPlayers.map((player, i) => {
+                                    return (
+                                        <tr key={i}>
+                                            <td>{i + 1}</td>
+                                            <td>{player.name}</td>
+                                            <td>{player.online ? "Yes" : "No"}</td>
+                                            <td>{player.score}</td>
+                                            <td>{player.gameRoom !== null ? player.gameRoom.name : ""}</td>
+                                        </tr>
+                                    );
+                                })
+                            }
                         </tbody>
                     </Table>
 

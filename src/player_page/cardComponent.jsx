@@ -1,7 +1,8 @@
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
-import axios from 'axios';
 import React, { Component } from 'react';
+import { doc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
+import db from '../firebase';
 
 class CardComponent extends Component {
     constructor(props) {
@@ -9,73 +10,84 @@ class CardComponent extends Component {
         this.state = {
             idPlayer: this.props.idPlayer,
             idRoom: this.props.idRoom,
+            actualGame: this.props.actualGame,
             nameRoom: '',
             location: '',
             nbPlayerIn: 0,
             maxPlayers: 0,
             linkImg: ''
         };
-        this.socket = this.props.socket;
-        this._mouted = false;
     }
 
     componentDidMount() {
-        if (this._mouted) return;
-        axios.get(`/api/gamerooms/${this.state.idRoom}`)
-            .then(response => response.data)
-            .then(data => {
-                this.setState({
-                    nameRoom: data.name,
-                    location: data.location,
-                    nbPlayerIn: data.listPlayers.length,
-                    maxPlayers: data.maxPlayers,
-                    linkImg: data.linkImg
-                });
-            })
-            .catch(err => {
-                console.log("Error while HTTP get this game room " + err);
+        const gameRoomRef = doc(db, "gamerooms", this.state.idRoom);
+        onSnapshot(gameRoomRef, (doc) => {
+            this.setState({
+                _id: doc.id,
+                nameRoom: doc.data().name,
+                location: doc.data().location,
+                nbPlayerIn: doc.data().listPlayers.length,
+                maxPlayers: doc.data().maxPlayers,
+                linkImg: doc.data().linkImg
             });
-        this._mouted = true;
-    }
-
-    async componentDidUpdate() {
-        // update data when each change happens
-        await this.socket.on("update data", async () => {
-            console.log("AAA updated");
-            await axios.get(`/api/gamerooms/${this.state.idRoom}`)
-                .then(response => response.data)
-                .then(data => {
-                    this.setState({
-                        nbPlayerIn: data.listPlayers.length
-                    });
-                })
-                .catch(err => {
-                    console.log("Error while HTTP get this game room " + err);
-                });
         });
+        if (this.state.actualGame === null) return;
+        if (this.state.actualGame.id === this.state.idRoom) {
+            document.getElementById('noti').innerHTML = "You joined the game room";
+            document.getElementById(`outRoomButton${this.state.nameRoom}`).style.display = "block";
+            for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
+                document.getElementsByClassName("inGameButton").item(i).disabled = true;
+            }
+        }
     }
 
-    handleOutGameRoom = () => {
+    handleInGameButtom = async () => {
+        document.getElementById('noti').innerHTML = "You joined the game room";
+        document.getElementById(`outRoomButton${this.state.nameRoom}`).style.display = "block";
+        for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
+            document.getElementsByClassName("inGameButton").item(i).disabled = true;
+        }
+
+        // charge data for this component
+        const gameRoomRef = doc(db, "gamerooms", this.state.idRoom);
+        const gameRoomSnap = await getDoc(gameRoomRef);
+
+        const playerRef = doc(db, "players", this.state.idPlayer);
+        const playerSnap = await getDoc(playerRef);
+
+        const listPlayersInRoom = gameRoomSnap.data().listPlayers;
+        if (listPlayersInRoom.indexOf(this.state.idPlayer) === -1 && playerSnap.data().gameRoom === null) {
+            listPlayersInRoom.push(this.state.idPlayer);
+            await updateDoc(gameRoomRef, {
+                listPlayers: listPlayersInRoom
+            });
+
+            await updateDoc(playerRef, {
+                gameRoom: { id: this.state.idRoom, name: this.state.nameRoom }
+            });
+        }
+    }
+
+    handleOutGameRoom = async () => {
         document.getElementById('noti').innerHTML = "You left the game room";
         document.getElementById(`outRoomButton${this.state.nameRoom}`).style.display = "none";
         for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
             document.getElementsByClassName("inGameButton").item(i).disabled = false;
         }
-        const sentData = { roomId: this.state.idRoom, player: { _id: this.state.idPlayer } };
-        this.socket.emit('out room', sentData, () => {
-            console.log("Leave success");
-        });
 
         // charge data for this component
-        axios.get(`/api/gamerooms/${this.state.idRoom}`)
-        .then(response => response.data)
-        .then(data => {
-            this.setState({
-                nbPlayerIn: data.listPlayers.length
-            });
-        })
-        .catch(err => {
-            console.log("Error while HTTP get this game room " + err);
+        const gameRoomRef = doc(db, "gamerooms", this.state.idRoom);
+        const gameRoomSnap = await getDoc(gameRoomRef);
+        const playerRef = doc(db, "players", this.state.idPlayer);
+        const playerSnap = await getDoc(playerRef);
+
+        var listPlayersInRoom = gameRoomSnap.data().listPlayers;
+        listPlayersInRoom = listPlayersInRoom.filter(playerId => playerId !== playerSnap.id);
+        await updateDoc(gameRoomRef, {
+            listPlayers: listPlayersInRoom
+        });
+        await updateDoc(playerRef, {
+            gameRoom: null
         });
     }
 
@@ -92,35 +104,7 @@ class CardComponent extends Component {
                             <span>Max players: {this.state.maxPlayers}</span><br />
                         </Card.Text>
 
-                        <Button className="inGameButton" disabled={false} variant="primary" onClick={() => {
-                            // charge data for this component
-                            axios.get(`/api/gamerooms/${this.state.idRoom}`)
-                                .then(response => response.data)
-                                .then(data => {
-                                    this.setState({
-                                        nbPlayerIn: data.listPlayers.length
-                                    });
-                                })
-                                .catch(err => {
-                                    console.log("Error while HTTP get this game room " + err);
-                                });
-
-                            const sentData = { roomId: this.state.idRoom, player: { _id: this.state.idPlayer } };
-                            this.socket.emit('join', sentData, (res, err) => {
-                                if (res) {
-                                    document.getElementById("noti").innerHTML = `You joined the game room ${this.state.nameRoom}`;
-                                    document.getElementById(`outRoomButton${this.state.nameRoom}`).style.display = "block";
-                                    for (let i = 0; i < document.getElementsByClassName("inGameButton").length; i++) {
-                                        document.getElementsByClassName("inGameButton").item(i).disabled = true;
-                                    }
-                                }
-                                if (err) {
-                                    document.getElementById("noti").innerHTML = `You cannot join the game room ${this.state.nameRoom}`;
-                                }
-                            });
-
-                        }
-                        }> Join </Button>
+                        <Button className="inGameButton" disabled={false} variant="primary" onClick={this.handleInGameButtom}> Join </Button>
                     </Card.Body>
                 </Card>
 
