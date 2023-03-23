@@ -1,28 +1,36 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 import NavBar from '../navBar';
+import { collection, getDocs, query, where, updateDoc, doc, getDoc } from "firebase/firestore";
+import db from '../firebase';
 
 class AdminLogIn extends Component {
     state = {
     }
 
-    handleValiderButton = () => {
+    handleValiderButton = async () => {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        axios.post('/api/admin', {"username": username, "password": password}, {
-            headers: {
-                "Content-type": "application/json"
-            }
-        })
-        .then((response) => response.data)
-        .then((data) => {
-            if (data.result === null) {
-                document.getElementById("failedSignIn").innerHTML = "Wrong log in info";
+        const q = query(collection(db, "admins"), where("username", "==", username), where("password", "==", password));
+        
+        const querySnapshot = await getDocs(q);
+        var isSignedIn = false;
+        querySnapshot.forEach(async (doc_query) => {
+            const adminRef = doc(db, "admins", doc_query.id);
+            // Set the "capital" field of the city 'DC'
+            await updateDoc(adminRef, {
+                online: true
+            });
+            if (username === 'admin') {
+                window.location.href = `/big-admin-page?id=${doc_query.id}`;
             } else {
-                console.log(data.result);
-                window.location = `/admin-page?id=${data.result._id}`;
+                const adminSnap = await getDoc(adminRef);
+                window.location.href = `/admin-game-page?idAd=${doc_query.id}&idGr=${adminSnap.data().gameRoom.id}`;
             }
-        })
+            isSignedIn = true;
+        });
+        if (!isSignedIn) {
+            document.getElementById('failedSignIn').innerHTML = 'Aucun admin ne correspond à ce nom d\'utilisateur et ce mot de passe';
+        }
     }
 
     render() {
