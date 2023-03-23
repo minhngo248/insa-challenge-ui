@@ -55,23 +55,6 @@ class AdminGamePage extends Component {
         }
     }
 
-    handleKickOutButton = async () => {
-        for (let i = 0; i < this.state.listPlayers.length; i++) {
-            const checkBox = document.getElementById(`checkBox-${this.state.listPlayers[i]._id}`);
-            if (checkBox.checked) {
-                const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
-                await updateDoc(playerRef, {
-                    gameRoom: null
-                });
-            }
-        }
-        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
-        var listIdPlayers = this.state.listPlayers.map(player => player._id);
-        await updateDoc(gameRoomRef, {
-            listPlayers: listIdPlayers
-        });
-    }
-
     handleLogOut = async () => {
         const adminRef = doc(db, "admins", this.state.idAdmin);
         // set online to false
@@ -104,13 +87,22 @@ class AdminGamePage extends Component {
                                     <td>{player.name}</td>
                                     <td>{player.score}</td>
                                     <td><input type={"number"} id={`score-${player._id}`} /></td>
-                                    <td><input type="checkbox" id={`checkBox-${player._id}`} /></td>
+                                    <td><Button onClick={async () => {
+                                        const playerRef = doc(db, "players", player._id);
+                                        await updateDoc(playerRef, {
+                                            gameRoom: null
+                                        });
+                                        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+                                        await updateDoc(gameRoomRef, {
+                                            listPlayers: this.state.listPlayers.map(player => player._id)
+                                        });
+                                    }}>Kick out</Button></td>
                                 </tr>
                             ))}
                         </tbody>
                     </Table>
 
-                    <Button onClick={this.handleEnterScore}>Validate the score</Button>   <Button onClick={this.handleKickOutButton}>Kick out</Button><br /><br />
+                    <Button onClick={this.handleEnterScore}>Validate the score</Button><br /><br />
                     <Button id="logOutButton" onClick={this.handleLogOut}>Log out</Button>
                 </div>
             </React.Fragment>

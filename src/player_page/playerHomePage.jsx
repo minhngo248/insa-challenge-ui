@@ -31,6 +31,13 @@ class PlayerHomePage extends Component {
                 isAuthentificated: doc.data().online,
                 actualGame: doc.data().gameRoom
             });
+
+            if (doc.data().gameRoom === null) {
+                for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
+                    document.getElementsByClassName("inGameButton").item(i).disabled = false;
+                    document.getElementsByClassName("outGameButton").item(i).style.display = "none";
+                }
+            }
         });
         
         const q = query(collection(db, "gamerooms"));
@@ -46,6 +53,8 @@ class PlayerHomePage extends Component {
             });
         });
     }
+
+
 
     handleLogOut = async () => {
         const playerRef = doc(db, "players", this.state._id);

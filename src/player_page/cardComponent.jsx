@@ -32,7 +32,6 @@ class CardComponent extends Component {
         });
         if (this.state.actualGame === null) return;
         if (this.state.actualGame.id === this.state.idRoom) {
-            console.log(this.state.actualGame.id);
             document.getElementById('noti').innerHTML = `You joined the game room`;
             document.getElementById(`outRoomButton${this.state.idRoom}`).style.display = "block";
             for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
@@ -50,7 +49,7 @@ class CardComponent extends Component {
             return;
         }
         document.getElementById(`inputCode${this.state.idRoom}`).value = "";
-        document.getElementById('noti').innerHTML = `You joined the game room ${this.state.idRoom}`;
+        document.getElementById('noti').innerHTML = `You joined the game room ${this.state.nameRoom}`;
         document.getElementById(`outRoomButton${this.state.idRoom}`).style.display = "block";
         for (let i = 0 ; i < document.getElementsByClassName("codeAccessBox").length ; i++) {
             document.getElementsByClassName("codeAccessBox").item(i).style.display = "none";
