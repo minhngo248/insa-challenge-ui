@@ -11,6 +11,7 @@ class PlayerHomePage extends Component {
             name: "",
             class: "",
             tel: "",
+            score: 0,
             isAuthentificated: false,
             listIdGames: [],
             actualGame: null
@@ -28,6 +29,7 @@ class PlayerHomePage extends Component {
                 name: doc.data().name,
                 class: doc.data().class,
                 tel: doc.data().tel_number,
+                score: doc.data().score,
                 isAuthentificated: doc.data().online,
                 actualGame: doc.data().gameRoom
             });
@@ -87,8 +89,11 @@ class PlayerHomePage extends Component {
                 </div>
                 <div id="main">
                     <h2>Hello {this.state.name}</h2>
+                    <p>
+                    <span>Your score: {this.state.score}</span><br />
+                    </p>
+
                     <h2>List of game rooms</h2>
-                    <span id="noti"></span><br />
                     {
                         this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
                     }

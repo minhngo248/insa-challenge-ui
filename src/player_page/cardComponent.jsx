@@ -15,7 +15,8 @@ class CardComponent extends Component {
             location: '',
             nbPlayerIn: 0,
             maxPlayers: 0,
-            linkImg: ''
+            linkImg: '',
+            alertJoinGameRoom: false
         };
     }
 
@@ -32,7 +33,6 @@ class CardComponent extends Component {
         });
         if (this.state.actualGame === null) return;
         if (this.state.actualGame.id === this.state.idRoom) {
-            document.getElementById('noti').innerHTML = `You joined the game room`;
             document.getElementById(`outRoomButton${this.state.idRoom}`).style.display = "block";
             for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
                 document.getElementsByClassName("inGameButton").item(i).disabled = true;
@@ -49,7 +49,7 @@ class CardComponent extends Component {
             return;
         }
         document.getElementById(`inputCode${this.state.idRoom}`).value = "";
-        document.getElementById('noti').innerHTML = `You joined the game room ${this.state.nameRoom}`;
+        alert(`You joined the game room ${this.state.nameRoom}`);
         document.getElementById(`outRoomButton${this.state.idRoom}`).style.display = "block";
         for (let i = 0 ; i < document.getElementsByClassName("codeAccessBox").length ; i++) {
             document.getElementsByClassName("codeAccessBox").item(i).style.display = "none";
@@ -74,7 +74,6 @@ class CardComponent extends Component {
     }
 
     handleOutGameRoom = async () => {
-        document.getElementById('noti').innerHTML = "You left the game room";
         document.getElementById(`outRoomButton${this.state.idRoom}`).style.display = "none";
         for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
             document.getElementsByClassName("inGameButton").item(i).disabled = false;
