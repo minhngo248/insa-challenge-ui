@@ -20,7 +20,11 @@ class AdminLogIn extends Component {
                 document.getElementById("failedSignIn").innerHTML = "Wrong log in info";
             } else {
                 console.log(data.result);
-                window.location = `/admin-page?id=${data.result._id}`;
+                if (data.result.username === "wolf") {
+                    window.location = `/admin-wolf-page?id=${data.result._id}`;
+                } else {
+                    window.location = `/admin-page?id=${data.result._id}`;
+                }
             }
         })
     }

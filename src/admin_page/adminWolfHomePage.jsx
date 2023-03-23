@@ -4,7 +4,7 @@ import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap';
 import { io } from 'socket.io-client';
 
-class AdminHomePage extends Component {
+class AdminWolfHomePage extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -123,7 +123,7 @@ class AdminHomePage extends Component {
         return (
             <React.Fragment>
                 <div id="main">
-                    <h2>Hello admin</h2>
+                    <h2>Hello admin Wolf !</h2>
                     <h3>List all players</h3>
                     <Table striped bordered hover id='tab'>
                         <thead>
@@ -146,4 +146,4 @@ class AdminHomePage extends Component {
     }
 }
 
-export default AdminHomePage;
+export default AdminWolfHomePage;

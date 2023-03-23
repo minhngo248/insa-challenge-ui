@@ -3,6 +3,7 @@ import './App.css';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 import AdminLogIn from './admin_page/adminLogIn';
 import AdminHomePage from './admin_page/adminHomePage';
+import AdminWolfHomePage from './admin_page/adminWolfHomePage';
 import PlayerLogIn from './home_page/playerLogIn';
 import PlayerHomePage from './player_page/playerHomePage';
 
@@ -31,6 +32,8 @@ function App() {
           with exact path "/about", in component 
           props we passes the imported component*/}
           <Route path="/admin-page" component={AdminHomePage} />
+
+          <Route path="/admin-wolf-page" component={AdminWolfHomePage} />
 
           {/* If any route mismatches the upper 
           route endpoints then, redirect triggers 
