@@ -15,8 +15,7 @@ class CardComponent extends Component {
             location: '',
             nbPlayerIn: 0,
             maxPlayers: 0,
-            linkImg: '',
-            alertJoinGameRoom: false
+            linkImg: ''
         };
     }
 

@@ -50,7 +50,7 @@ class BigAdminHomePage extends Component {
         const name = document.getElementById("name").value;
         const classData = document.getElementById("class").value;
         var telephone = document.getElementById("telephone").value;
-        telephone.replace(/ /g, '');
+        telephone = telephone.replace(/ /g, '');
         const q = query(collection(db, "players"), where("tel_number", "==", telephone));
         const querySnapshot = await getDocs(q);
         if (querySnapshot.size > 0) {
