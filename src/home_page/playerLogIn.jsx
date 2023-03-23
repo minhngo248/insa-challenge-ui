@@ -12,7 +12,8 @@ class PlayerLogIn extends Component {
 
 
     handleValiderButton = async () => {
-        const telephone = document.getElementById('telephone').value;
+        var telephone = document.getElementById('telephone').value;
+        telephone = telephone.replace(/ /g, '');
         const q = query(collection(db, "players"), where("tel_number", "==", telephone));
         
         const querySnapshot = await getDocs(q);

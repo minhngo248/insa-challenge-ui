@@ -38,7 +38,7 @@ class PlayerHomePage extends Component {
             var listGameRooms = [];
             querySnapshot.forEach((doc) => {
                 listGameRooms.push({
-                    _id: doc.id
+                    id: doc.id
                 });
             });
             this.setState({
@@ -70,7 +70,7 @@ class PlayerHomePage extends Component {
     }
 
     render() {
-        if (!this.state.isAuthentificated) return (<h1>Not found</h1>);
+        if (!this.state.isAuthentificated) return (<h1>Loading ...</h1>);
         return (
             <React.Fragment>
                 <div id="header">
@@ -81,7 +81,7 @@ class PlayerHomePage extends Component {
                     <h2>List of game rooms</h2>
                     <span id="noti"></span><br />
                     {
-                        this.state.listIdGames.map((game, i) => <CardComponent key={game._id} idPlayer={this.state._id} idRoom={game._id} actualGame={this.state.actualGame} />)
+                        this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
                     }
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
 

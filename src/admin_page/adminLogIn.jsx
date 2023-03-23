@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import NavBar from '../navBar';
-import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, where, updateDoc, doc, getDoc } from "firebase/firestore";
 import db from '../firebase';
 
 class AdminLogIn extends Component {
@@ -20,7 +20,12 @@ class AdminLogIn extends Component {
             await updateDoc(adminRef, {
                 online: true
             });
-            window.location.href = `/admin-page?id=${doc_query.id}`;
+            if (username === 'admin') {
+                window.location.href = `/big-admin-page?id=${doc_query.id}`;
+            } else {
+                const adminSnap = await getDoc(adminRef);
+                window.location.href = `/admin-game-page?idAd=${doc_query.id}&idGr=${adminSnap.data().gameRoom.id}`;
+            }
             isSignedIn = true;
         });
         if (!isSignedIn) {

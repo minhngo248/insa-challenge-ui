@@ -1,10 +1,10 @@
-import logo from './logo.svg';
 import './App.css';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 import AdminLogIn from './admin_page/adminLogIn';
-import AdminHomePage from './admin_page/adminHomePage';
+import BigAdminHomePage from './admin_page/bigAdminHomePage';
 import PlayerLogIn from './home_page/playerLogIn';
 import PlayerHomePage from './player_page/playerHomePage';
+import AdminGamePage from './admin_page/adminGamePage';
 
 function App() {
   return (
@@ -30,7 +30,12 @@ function App() {
           {/* This route is for about component 
           with exact path "/about", in component 
           props we passes the imported component*/}
-          <Route path="/admin-page" component={AdminHomePage} />
+          <Route path="/big-admin-page" component={BigAdminHomePage} />
+
+          {/* This route is for about component 
+          with exact path "/about", in component 
+          props we passes the imported component*/}
+          <Route path="/admin-game-page" component={AdminGamePage} />
 
           {/* If any route mismatches the upper 
           route endpoints then, redirect triggers 

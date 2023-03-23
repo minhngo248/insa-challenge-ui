@@ -23,7 +23,6 @@ class CardComponent extends Component {
         const gameRoomRef = doc(db, "gamerooms", this.state.idRoom);
         onSnapshot(gameRoomRef, (doc) => {
             this.setState({
-                _id: doc.id,
                 nameRoom: doc.data().name,
                 location: doc.data().location,
                 nbPlayerIn: doc.data().listPlayers.length,
@@ -33,25 +32,32 @@ class CardComponent extends Component {
         });
         if (this.state.actualGame === null) return;
         if (this.state.actualGame.id === this.state.idRoom) {
-            document.getElementById('noti').innerHTML = "You joined the game room";
-            document.getElementById(`outRoomButton${this.state.nameRoom}`).style.display = "block";
+            console.log(this.state.actualGame.id);
+            document.getElementById('noti').innerHTML = `You joined the game room`;
+            document.getElementById(`outRoomButton${this.state.idRoom}`).style.display = "block";
             for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
                 document.getElementsByClassName("inGameButton").item(i).disabled = true;
             }
         }
     }
 
-    handleInGameButtom = async () => {
-        document.getElementById('noti').innerHTML = "You joined the game room";
-        document.getElementById(`outRoomButton${this.state.nameRoom}`).style.display = "block";
-        for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
+    handleAccessGameButton = async () => {
+        const gameRoomRef = doc(db, "gamerooms", this.state.idRoom);
+        const gameRoomSnap = await getDoc(gameRoomRef);
+        const codeAccess = document.getElementById(`inputCode${this.state.idRoom}`).value;
+        if (codeAccess !== gameRoomSnap.data().code) {
+            alert("Wrong code access");
+            return;
+        }
+        document.getElementById(`inputCode${this.state.idRoom}`).value = "";
+        document.getElementById('noti').innerHTML = `You joined the game room ${this.state.idRoom}`;
+        document.getElementById(`outRoomButton${this.state.idRoom}`).style.display = "block";
+        for (let i = 0 ; i < document.getElementsByClassName("codeAccessBox").length ; i++) {
+            document.getElementsByClassName("codeAccessBox").item(i).style.display = "none";
             document.getElementsByClassName("inGameButton").item(i).disabled = true;
         }
 
         // charge data for this component
-        const gameRoomRef = doc(db, "gamerooms", this.state.idRoom);
-        const gameRoomSnap = await getDoc(gameRoomRef);
-
         const playerRef = doc(db, "players", this.state.idPlayer);
         const playerSnap = await getDoc(playerRef);
 
@@ -70,7 +76,7 @@ class CardComponent extends Component {
 
     handleOutGameRoom = async () => {
         document.getElementById('noti').innerHTML = "You left the game room";
-        document.getElementById(`outRoomButton${this.state.nameRoom}`).style.display = "none";
+        document.getElementById(`outRoomButton${this.state.idRoom}`).style.display = "none";
         for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
             document.getElementsByClassName("inGameButton").item(i).disabled = false;
         }
@@ -104,11 +110,24 @@ class CardComponent extends Component {
                             <span>Max players: {this.state.maxPlayers}</span><br />
                         </Card.Text>
 
-                        <Button className="inGameButton" disabled={false} variant="primary" onClick={this.handleInGameButtom}> Join </Button>
+                        <Button className="inGameButton" disabled={false} variant="primary" onClick={() => {
+                            if (this.state.nbPlayerIn === this.state.maxPlayers) {
+                                alert("This game room is full");
+                                return;
+                            }
+                            document.getElementById(`codeAccessBox${this.state.idRoom}`).style.display = "block";
+                        }}> Join </Button>
                     </Card.Body>
                 </Card>
 
-                <button id={`outRoomButton${this.state.nameRoom}`} style={{ display: "none" }} onClick={this.handleOutGameRoom}>Out game room</button><br />
+                <div id={`codeAccessBox${this.state.idRoom}`} className="codeAccessBox"
+                    style={{display: "none"}}>
+                    <span>Access code:</span><br />
+                    <input type="text" id={`inputCode${this.state.idRoom}`} />
+                    <button id="accessRoomButton" onClick={this.handleAccessGameButton}>Validate</button>
+                </div>
+
+                <button className="outGameButton" id={`outRoomButton${this.state.idRoom}`} style={{ display: "none" }} onClick={this.handleOutGameRoom}>Out game room</button><br />
             </React.Fragment>
         );
     }
