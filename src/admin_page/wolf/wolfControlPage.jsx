@@ -2,9 +2,9 @@ import React, { Component } from 'react';
 import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap';
 import { doc, onSnapshot, updateDoc, where, query, collection, getDoc } from "firebase/firestore";
-import db from '../firebase';
+import db from '../../firebase';
 
-class AdminGamePage extends Component {
+class WolfControlPage extends Component {
     constructor(props) {
         super(props);
         const params = new URLSearchParams(this.props.location.search);
@@ -15,8 +15,9 @@ class AdminGamePage extends Component {
             listPlayers: [],
             idGameRoom: idGameRoom,
             nameGameRoom: '',
-            isAuthenticated: false
-        };
+            // scoreInGame: 
+            isAuthenticated: false,
+        }
     }
 
     async componentDidMount() {
@@ -34,27 +35,47 @@ class AdminGamePage extends Component {
                 listAllPlayers.push({
                     _id: doc.id,
                     name: doc.data().name,
-                    score: doc.data().score
+                    scoreInGame: doc.data().scoreInGame["wolf"],
+                    // history: [],
                 });
-                console.log(doc.data());
             });
-            
-
+    
             this.setState({
                 listPlayers: listAllPlayers
             });
         });
+
+        // const roomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        // const roomSnap = await getDoc(roomRef);
+        // this.setState({
+        //     scoreInGame: roomSnap.data().scoreInGame
+        // });
+        // const qScore = query(collection(db, "gamerooms"), where("id", "==", this.state.idGameRoom));
+        // onSnapshot(qScore, (querySnapshot) => {
+        // });
     }
 
-    handleEnterScore = async () => {
-        for (let i = 0; i < this.state.listPlayers.length; i++) {
-            const score = document.getElementById(`score-${this.state.listPlayers[i]._id}`).value;
-            if (score === "") continue;
-            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
-            await updateDoc(playerRef, {
-                score: parseInt(score)
-            });
-        }
+    async handleUpdateScore(player) {
+        const score = document.getElementById(`score-${player._id}`).value;
+        if (score === "") return;
+        // const oldScore = player.scoreInGame;
+        player.scoreInGame = parseInt(score);
+        // console.log(this.state.listPlayers);
+        const playerRef = doc(db, "players", player._id);
+        await updateDoc(playerRef, {
+            // scoreInGame: {"wolf": player.scoreInGame}
+            "scoreInGame.wolf": player.scoreInGame
+        });
+    }
+
+    async handleUpdateHistory(player) {
+        const playerRef = doc(db, "players", player._id);
+        // console.log(player.historyWolf);
+        // const history = [...player.historyWolf, player.scoreWolf];
+        // await updateDoc(playerRef, {
+            // historyWolf: [...player.historyWolf, {"player.scoreWolf": 4}],
+        //     historyWolf: []
+        // });
     }
 
     handleLogOut = async () => {
@@ -69,9 +90,9 @@ class AdminGamePage extends Component {
     render() {
         if (!this.state.isAuthenticated) return (<h1>Loading ...</h1>);
         return (
-            <React.Fragment>
+            <>
                 <div id="main">
-                    <h1>Game Room {this.state.nameGameRoom}</h1>
+                    <h1>Wolf Control Page</h1>
                     <Table striped bordered hover>
                         <thead>
                             <tr>
@@ -79,37 +100,50 @@ class AdminGamePage extends Component {
                                 <th>Name</th>
                                 <th>Score</th>
                                 <th>Enter the score</th>
-                                <th>Kick out</th>
-                            </tr>
+                                <th>Update history</th>
+                            </tr> 
                         </thead>
                         <tbody>
                             {this.state.listPlayers.map((player, index) => (
                                 <tr key={index}>
                                     <td>{index + 1}</td>
                                     <td>{player.name}</td>
-                                    <td>{player.score}</td>
-                                    <td><input type={"number"} id={`score-${player._id}`} /></td>
-                                    <td><Button onClick={async () => {
-                                        const playerRef = doc(db, "players", player._id);
-                                        await updateDoc(playerRef, {
-                                            gameRoom: null
-                                        });
-                                        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
-                                        await updateDoc(gameRoomRef, {
-                                            listPlayers: this.state.listPlayers.map(player => player._id)
-                                        });
-                                    }}>Kick out</Button></td>
+                                    <td>{player.scoreInGame}</td>
+                                    <td>
+                                        <input type={"number"} id={`score-${player._id}`} />
+                                        <Button onClick={() => this.handleUpdateScore(player)}>Update Score</Button>
+                                    </td>
+                                    <td>
+                                        <Button onClick={() => this.handleUpdateHistory(player)}>Update History</Button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </Table>
 
-                    <Button onClick={this.handleEnterScore}>Validate the score</Button><br /><br />
                     <Button id="logOutButton" onClick={this.handleLogOut}>Log out</Button>
                 </div>
-            </React.Fragment>
+            </>
         );
     }
 }
 
-export default AdminGamePage;
+function calculateScore(score1, score2) {
+    var score = score1;
+
+    if (score2 <= -1) {
+        score -= 2;
+    } else if (score2 >= 1) {
+        score += 1;
+    } else {
+        if (score1 >= 0) {
+            score += 1;
+        }
+    }
+
+    if (score <= -1) score = -1;
+
+    return score;
+}
+
+export default WolfControlPage;
