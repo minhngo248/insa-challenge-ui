@@ -12,7 +12,7 @@ class PlayerHomePage extends Component {
             class: "",
             tel: "",
             score: 0,
-            isAuthentificated: false,
+            isAuthenticated: false,
             listIdGames: [],
             actualGame: null
         };
@@ -30,7 +30,7 @@ class PlayerHomePage extends Component {
                 class: doc.data().class,
                 tel: doc.data().tel_number,
                 score: doc.data().score,
-                isAuthentificated: doc.data().online,
+                isAuthenticated: doc.data().online,
                 actualGame: doc.data().gameRoom
             });
 
@@ -81,7 +81,7 @@ class PlayerHomePage extends Component {
     }
 
     render() {
-        if (!this.state.isAuthentificated) return (<h1>Loading ...</h1>);
+        if (!this.state.isAuthenticated) return (<h1>Loading ...</h1>);
         return (
             <React.Fragment>
                 <div id="header">

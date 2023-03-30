@@ -19,13 +19,13 @@ class PlayerLogIn extends Component {
         const querySnapshot = await getDocs(q);
         var isSignedIn = false;
         querySnapshot.forEach(async (doc_query) => {
+            isSignedIn = true;
             const playerRef = doc(db, "players", doc_query.id);
             // Set the "capital" field of the city 'DC'
             await updateDoc(playerRef, {
                 online: true
             });
             window.location.href = `/player-page?id=${doc_query.id}`;
-            isSignedIn = true;
         });
         if (!isSignedIn) {
             document.getElementById('no-player').innerHTML = 'Aucun joueur ne correspond à ce numéro de téléphone';

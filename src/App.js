@@ -5,6 +5,7 @@ import BigAdminHomePage from './admin_page/bigAdminHomePage';
 import PlayerLogIn from './home_page/playerLogIn';
 import PlayerHomePage from './player_page/playerHomePage';
 import AdminGamePage from './admin_page/adminGamePage';
+import WolfControlPage from './admin_page/wolf/wolfControlPage';
 
 function App() {
   return (
@@ -36,6 +37,8 @@ function App() {
           with exact path "/about", in component 
           props we passes the imported component*/}
           <Route path="/admin-game-page" component={AdminGamePage} />
+
+          <Route path="/wolf-page" component={WolfControlPage} />
 
           {/* If any route mismatches the upper 
           route endpoints then, redirect triggers 
