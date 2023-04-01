@@ -1,19 +1,15 @@
 import React, { Component } from 'react';
-import CardComponent from './cardComponent';
 import { doc, updateDoc, onSnapshot, collection, query, getDoc } from "firebase/firestore";
 import db from '../firebase';
 
-class PlayerHomePage extends Component {
+class PlayerLoadingPage extends Component {
     constructor(props) {
         super(props);
         this.state = {
             _id: "",
             name: "",
-            class: "",
-            tel: "",
             score: 0,
             isAuthenticated: false,
-            listIdGames: [],
             stateInGame: "",
             actualGame: null
         };
@@ -21,47 +17,44 @@ class PlayerHomePage extends Component {
 
     componentDidMount() {
         const params = new URLSearchParams(this.props.location.search);
-        const idPlayer = params.get("id");
+        const idPlayer = params.get("idAd");
 
         const playerRef = doc(db, "players", idPlayer);
         onSnapshot(playerRef, (doc) => {
             this.setState({
                 _id: doc.id,
                 name: doc.data().name,
-                class: doc.data().class,
-                tel: doc.data().tel_number,
                 score: doc.data().score,
                 isAuthenticated: doc.data().online,
                 stateInGame: doc.data().stateInGame,
                 actualGame: doc.data().gameRoom
             });
 
-            if (doc.data().gameRoom === null) {
-                for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
-                    document.getElementsByClassName("inGameButton").item(i).disabled = false;
-                    document.getElementsByClassName("outGameButton").item(i).style.display = "none";
-                }
-            }
-            if (doc.data().stateInGame == "Loading") {
-                window.location = `/player-loading-page?idAd=${doc.id}`;
+            if (doc.data().stateInGame == "") {
+                window.location = `/player-page?id=${doc.id}`;
             }
         });
         
-        const q = query(collection(db, "gamerooms"));
-        onSnapshot(q, (querySnapshot) => {
-            var listGameRooms = [];
-            querySnapshot.forEach((doc) => {
-                listGameRooms.push({
-                    id: doc.id
-                });
-            });
-            this.setState({
-                listIdGames: listGameRooms
-            });
-        });
     }
 
-
+    handleBack = async () => {
+        const playerRef = doc(db, "players", this.state._id);
+        const playerSnap = await getDoc(playerRef);
+        if (playerSnap.data().gameRoom !== null) {
+            const gameRoomRef = doc(db, "gamerooms", playerSnap.data().gameRoom.id);
+            const gameRoomSnap = await getDoc(gameRoomRef);
+            var listPlayersInRoom = gameRoomSnap.data().listPlayers;
+            listPlayersInRoom = listPlayersInRoom.filter(playerId => playerId !== playerSnap.id);
+            await updateDoc(gameRoomRef, {
+                listPlayers: listPlayersInRoom
+            });
+            await updateDoc(playerRef, {
+                gameRoom: null,
+                stateInGame: ""
+            });
+        }
+        // window.location = '/player-home-page';
+    }
 
     handleLogOut = async () => {
         const playerRef = doc(db, "players", this.state._id);
@@ -88,27 +81,22 @@ class PlayerHomePage extends Component {
     render() {
         if (!this.state.isAuthenticated) return (<h1>Loading ...</h1>);
         return (
-            <React.Fragment>
-                <div id="header">
-
-                </div>
+            <>
                 <div id="main">
-                    <h2>Hello {this.state.name}</h2>
+                    <h1>Hello {this.state.name}</h1>
                     <p>
                     <span>Your score: {this.state.score}</span><br />
                     </p>
-
-                    <h2>List of game rooms</h2>
-                    {
-                        this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
-                    }
+                    <h1>Game room: {this.state.actualGame.name}</h1>
+                    <h2 className="Loading">
+                        Waiting for all players to join...
+                    </h2>
+                    <button id="logOutButton" onClick={this.handleBack}>Back</button>
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
-
-
                 </div>
-            </React.Fragment>
-        );
+            </>
+        )
     }
 }
 
-export default PlayerHomePage;
+export default PlayerLoadingPage;

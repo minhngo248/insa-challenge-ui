@@ -15,7 +15,6 @@ class WolfControlPage extends Component {
             listPlayers: [],
             idGameRoom: idGameRoom,
             nameGameRoom: '',
-            // scoreInGame: 
             isAuthenticated: false,
         }
     }
@@ -44,15 +43,10 @@ class WolfControlPage extends Component {
                 listPlayers: listAllPlayers
             });
         });
+    }
 
-        // const roomRef = doc(db, "gamerooms", this.state.idGameRoom);
-        // const roomSnap = await getDoc(roomRef);
-        // this.setState({
-        //     scoreInGame: roomSnap.data().scoreInGame
-        // });
-        // const qScore = query(collection(db, "gamerooms"), where("id", "==", this.state.idGameRoom));
-        // onSnapshot(qScore, (querySnapshot) => {
-        // });
+    async handleStartGame() {
+        initScore(this.state.listPlayers);
     }
 
     async handleUpdateScore(player) {
@@ -63,7 +57,6 @@ class WolfControlPage extends Component {
         // console.log(this.state.listPlayers);
         const playerRef = doc(db, "players", player._id);
         await updateDoc(playerRef, {
-            // scoreInGame: {"wolf": player.scoreInGame}
             "scoreInGame.wolf": player.scoreInGame
         });
     }
@@ -120,12 +113,40 @@ class WolfControlPage extends Component {
                             ))}
                         </tbody>
                     </Table>
-
+                    
+                    <Button id="Start Game" onClick={() => this.handleStartGame()}>Start Game</Button>
                     <Button id="logOutButton" onClick={this.handleLogOut}>Log out</Button>
                 </div>
             </>
         );
     }
+}
+
+function initScore(listPlayers) {
+    const noInfection = listPlayers.length * 15 % 100;
+    let indexInfection = [];
+    while (indexInfection.length < noInfection) {
+        const index = Math.floor(Math.random() * listPlayers.length);
+        if (!indexInfection.includes(index)) {
+            indexInfection.push(index);
+        }
+    }
+
+    listPlayers.forEach(async (player, index) => {
+        const playerRef = doc(db, "players", player._id);
+        await updateDoc(playerRef, {
+            stateInGame: "Playing"
+        });
+        if (indexInfection.includes(index)) {
+            await updateDoc(playerRef, {
+                "scoreInGame.wolf": -1
+            });
+        } else {
+            await updateDoc(playerRef, {
+                "scoreInGame.wolf": 0
+            });
+        }
+    });
 }
 
 function calculateScore(score1, score2) {
