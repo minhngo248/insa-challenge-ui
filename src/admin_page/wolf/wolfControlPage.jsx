@@ -46,7 +46,7 @@ class WolfControlPage extends Component {
     }
 
     async handleStartGame() {
-        initScore(this.state.listPlayers);
+        await initScore(this.state.listPlayers);
     }
 
     async handleUpdateScore(player) {
@@ -62,7 +62,7 @@ class WolfControlPage extends Component {
     }
 
     async handleUpdateHistory(player) {
-        const playerRef = doc(db, "players", player._id);
+        // const playerRef = doc(db, "players", player._id);
         // console.log(player.historyWolf);
         // const history = [...player.historyWolf, player.scoreWolf];
         // await updateDoc(playerRef, {
@@ -123,8 +123,9 @@ class WolfControlPage extends Component {
 }
 
 function initScore(listPlayers) {
-    const noInfection = listPlayers.length * 15 % 100;
+    var noInfection = parseInt(listPlayers.length * 0.15);
     let indexInfection = [];
+    if (noInfection <= 1) noInfection = 1;
     while (indexInfection.length < noInfection) {
         const index = Math.floor(Math.random() * listPlayers.length);
         if (!indexInfection.includes(index)) {

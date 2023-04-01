@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { doc, updateDoc, onSnapshot, collection, query, getDoc } from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
 import db from '../firebase';
 
 class PlayerLoadingPage extends Component {
@@ -30,9 +30,13 @@ class PlayerLoadingPage extends Component {
                 actualGame: doc.data().gameRoom
             });
 
-            if (doc.data().stateInGame == "") {
+            if (doc.data().stateInGame === "") {
                 window.location = `/player-page?id=${doc.id}`;
+            // } else if (doc.data().stateInGame == "Playing" && doc.data().gameRoom.name === "Wolf") {
+            } else if (doc.data().stateInGame === "Playing") {
+                window.location = `/player-wolf-page?id=${doc.id}`;
             }
+
         });
         
     }
@@ -53,7 +57,6 @@ class PlayerLoadingPage extends Component {
                 stateInGame: ""
             });
         }
-        // window.location = '/player-home-page';
     }
 
     handleLogOut = async () => {
