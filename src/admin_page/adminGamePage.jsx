@@ -15,7 +15,7 @@ class AdminGamePage extends Component {
             listPlayers: [],
             idGameRoom: idGameRoom,
             nameGameRoom: '',
-            isAuthentificated: false
+            isAuthenticated: false
         };
     }
 
@@ -24,7 +24,7 @@ class AdminGamePage extends Component {
         const adminSnap = await getDoc(adminRef);
         this.setState({
             nameGameRoom: adminSnap.data().gameRoom.name,
-            isAuthentificated: adminSnap.data().online
+            isAuthenticated: adminSnap.data().online
         });
 
         const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
@@ -36,7 +36,9 @@ class AdminGamePage extends Component {
                     name: doc.data().name,
                     score: doc.data().score
                 });
+                console.log(doc.data());
             });
+            
 
             this.setState({
                 listPlayers: listAllPlayers
@@ -65,7 +67,7 @@ class AdminGamePage extends Component {
     }
 
     render() {
-        if (!this.state.isAuthentificated) return (<h1>Loading ...</h1>);
+        if (!this.state.isAuthenticated) return (<h1>Loading ...</h1>);
         return (
             <React.Fragment>
                 <div id="main">

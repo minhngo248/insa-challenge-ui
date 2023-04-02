@@ -15,6 +15,7 @@ class AdminLogIn extends Component {
         const querySnapshot = await getDocs(q);
         var isSignedIn = false;
         querySnapshot.forEach(async (doc_query) => {
+            isSignedIn = true;
             const adminRef = doc(db, "admins", doc_query.id);
             // Set the "capital" field of the city 'DC'
             await updateDoc(adminRef, {
@@ -24,9 +25,12 @@ class AdminLogIn extends Component {
                 window.location.href = `/big-admin-page?id=${doc_query.id}`;
             } else {
                 const adminSnap = await getDoc(adminRef);
-                window.location.href = `/admin-game-page?idAd=${doc_query.id}&idGr=${adminSnap.data().gameRoom.id}`;
+                if (username === 'wolf') {
+                    window.location.href = `/wolf-page?idAd=${doc_query.id}&idGr=${adminSnap.data().gameRoom.id}`;
+                } else {
+                    window.location.href = `/admin-game-page?idAd=${doc_query.id}&idGr=${adminSnap.data().gameRoom.id}`;
+                }
             }
-            isSignedIn = true;
         });
         if (!isSignedIn) {
             document.getElementById('failedSignIn').innerHTML = 'Aucun admin ne correspond à ce nom d\'utilisateur et ce mot de passe';

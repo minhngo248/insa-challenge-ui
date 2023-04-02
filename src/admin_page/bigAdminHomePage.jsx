@@ -10,7 +10,7 @@ class BigAdminHomePage extends Component {
         this.state = {
             idAdmin: '',
             listPlayers: [],
-            isAuthentificated: false
+            isAuthenticated: false
         };
     }
 
@@ -22,7 +22,7 @@ class BigAdminHomePage extends Component {
         onSnapshot(adminRef, (doc) => {
             this.setState({
                 idAdmin: doc.id,
-                isAuthentificated: doc.data().online
+                isAuthenticated: doc.data().online
             });
         });
 
@@ -84,7 +84,7 @@ class BigAdminHomePage extends Component {
     }
 
     render() {
-        if (!this.state.isAuthentificated) return (<h1>Loading ...</h1>);
+        if (!this.state.isAuthenticated) return (<h1>Loading ...</h1>);
         return (
             <React.Fragment>
                 <div id="main">
