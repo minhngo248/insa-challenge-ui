@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import QRCode from "react-qr-code";
-import { doc, updateDoc, onSnapshot, collection, query, getDoc } from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
 import db from '../firebase';
+import CameraComponent from './cameraComponent';
 
 class PlayerWolfPage extends Component {
     constructor(props) {
@@ -95,11 +96,12 @@ class PlayerWolfPage extends Component {
                         <QRCode
                         size={256}
                         style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                        value="https://www.google.com"
+                        value={this.state._id}
                         viewBox={`0 0 256 256`}
                         />
                     </div>
-                    <button id="logOutButton" onClick={this.handleBack}>Back</button>
+                    <CameraComponent />
+                    <button id="backButton" onClick={this.handleBack}>Back</button>
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
                 </div>
             </>
