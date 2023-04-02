@@ -23,7 +23,8 @@ class PlayerLogIn extends Component {
             const playerRef = doc(db, "players", doc_query.id);
             // Set the "capital" field of the city 'DC'
             await updateDoc(playerRef, {
-                online: true
+                online: true,
+                stateInGame: ""
             });
             window.location.href = `/player-page?id=${doc_query.id}`;
         });

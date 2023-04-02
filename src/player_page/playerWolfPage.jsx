@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
-import CardComponent from './cardComponent';
-import { doc, updateDoc, onSnapshot, collection, query, getDoc } from "firebase/firestore";
+import QRCode from "react-qr-code";
+import { doc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
 import db from '../firebase';
+import CameraComponent from './cameraComponent';
 
-class PlayerHomePage extends Component {
+class PlayerWolfPage extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -36,32 +37,29 @@ class PlayerHomePage extends Component {
                 actualGame: doc.data().gameRoom
             });
 
-            if (doc.data().gameRoom === null) {
-                for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
-                    document.getElementsByClassName("inGameButton").item(i).disabled = false;
-                    document.getElementsByClassName("outGameButton").item(i).style.display = "none";
-                }
+            if (doc.data().stateInGame === "") {
+                window.location = `/player-page?id=${doc.id}`;
             }
-            if (doc.data().stateInGame == "Loading") {
-                window.location = `/player-loading-page?idAd=${doc.id}`;
-            }
-        });
-        
-        const q = query(collection(db, "gamerooms"));
-        onSnapshot(q, (querySnapshot) => {
-            var listGameRooms = [];
-            querySnapshot.forEach((doc) => {
-                listGameRooms.push({
-                    id: doc.id
-                });
-            });
-            this.setState({
-                listIdGames: listGameRooms
-            });
         });
     }
 
-
+    handleBack = async () => {
+        const playerRef = doc(db, "players", this.state._id);
+        const playerSnap = await getDoc(playerRef);
+        if (playerSnap.data().gameRoom !== null) {
+            const gameRoomRef = doc(db, "gamerooms", playerSnap.data().gameRoom.id);
+            const gameRoomSnap = await getDoc(gameRoomRef);
+            var listPlayersInRoom = gameRoomSnap.data().listPlayers;
+            listPlayersInRoom = listPlayersInRoom.filter(playerId => playerId !== playerSnap.id);
+            await updateDoc(gameRoomRef, {
+                listPlayers: listPlayersInRoom
+            });
+            await updateDoc(playerRef, {
+                gameRoom: null,
+                stateInGame: ""
+            });
+        }
+    }
 
     handleLogOut = async () => {
         const playerRef = doc(db, "players", this.state._id);
@@ -85,30 +83,30 @@ class PlayerHomePage extends Component {
         window.location = '/';
     }
 
+
     render() {
         if (!this.state.isAuthenticated) return (<h1>Loading ...</h1>);
         return (
-            <React.Fragment>
-                <div id="header">
-
-                </div>
+            <>
                 <div id="main">
-                    <h2>Hello {this.state.name}</h2>
-                    <p>
-                    <span>Your score: {this.state.score}</span><br />
-                    </p>
-
-                    <h2>List of game rooms</h2>
-                    {
-                        this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
-                    }
+                    <h2 className="Playing">
+                        Welcome to the game of WOLF !!
+                    </h2>
+                    <div style={{ height: "auto", margin: "0 auto", maxWidth: 128, width: "100%" }}>
+                        <QRCode
+                        size={256}
+                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                        value={this.state._id}
+                        viewBox={`0 0 256 256`}
+                        />
+                    </div>
+                    <CameraComponent />
+                    <button id="backButton" onClick={this.handleBack}>Back</button>
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
-
-
                 </div>
-            </React.Fragment>
+            </>
         );
     }
 }
 
-export default PlayerHomePage;
+export default PlayerWolfPage;

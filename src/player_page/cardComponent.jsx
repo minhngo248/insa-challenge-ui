@@ -67,7 +67,8 @@ class CardComponent extends Component {
             });
 
             await updateDoc(playerRef, {
-                gameRoom: { id: this.state.idRoom, name: this.state.nameRoom }
+                gameRoom: { id: this.state.idRoom, name: this.state.nameRoom },
+                stateInGame: "Loading"
             });
         }
     }
