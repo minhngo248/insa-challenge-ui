@@ -65,13 +65,13 @@ class AdminGamePage extends Component {
         document.getElementById("endGame").disabled = true;
         alert("Game ended!");
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
-        for (let i = 0; i < this.state.listPlayers.length; i++) {
-            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
-            await updateDoc(playerRef, {
-                stateInGame: "",
-                gameRoom: null
-            });
-        }
+        // for (let i = 0; i < this.state.listPlayers.length; i++) {
+        //     const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+        //     await updateDoc(playerRef, {
+        //         stateInGame: "",
+        //         gameRoom: null
+        //     });
+        // }
         await updateDoc(gameRoomRef, {
             status: "Not started",
             listPlayers: []
