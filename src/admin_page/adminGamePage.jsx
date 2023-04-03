@@ -36,13 +36,45 @@ class AdminGamePage extends Component {
                     name: doc.data().name,
                     score: doc.data().score
                 });
-                console.log(doc.data());
             });
-            
 
             this.setState({
                 listPlayers: listAllPlayers
             });
+        });
+    }
+
+    handleStartGame = async () => {
+        document.getElementById("startGame").disabled = true;
+        document.getElementById("endGame").disabled = false;
+        alert("Game started!");
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        await updateDoc(gameRoomRef, {
+            status: "Started"
+        });
+        for (let i = 0; i < this.state.listPlayers.length; i++) {
+            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+            await updateDoc(playerRef, {
+                stateInGame: "Playing"
+            });
+        }
+    }
+
+    handleEndGame = async () => {
+        document.getElementById("startGame").disabled = false;
+        document.getElementById("endGame").disabled = true;
+        alert("Game ended!");
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        for (let i = 0; i < this.state.listPlayers.length; i++) {
+            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+            await updateDoc(playerRef, {
+                stateInGame: "",
+                gameRoom: null
+            });
+        }
+        await updateDoc(gameRoomRef, {
+            status: "Not started",
+            listPlayers: []
         });
     }
 
@@ -92,7 +124,8 @@ class AdminGamePage extends Component {
                                     <td><Button onClick={async () => {
                                         const playerRef = doc(db, "players", player._id);
                                         await updateDoc(playerRef, {
-                                            gameRoom: null
+                                            gameRoom: null,
+                                            stateInGame: ""
                                         });
                                         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
                                         await updateDoc(gameRoomRef, {
@@ -105,6 +138,10 @@ class AdminGamePage extends Component {
                     </Table>
 
                     <Button onClick={this.handleEnterScore}>Validate the score</Button><br /><br />
+                    <Button id={"startGame"} onClick={this.handleStartGame}>Start Game</Button>
+                    <Button id={"endGame"} onClick={this.handleEndGame}>End Game</Button>
+                    <br />
+                    <br />
                     <Button id="logOutButton" onClick={this.handleLogOut}>Log out</Button>
                 </div>
             </React.Fragment>
