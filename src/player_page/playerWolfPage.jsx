@@ -1,40 +1,36 @@
 import React, { Component } from 'react';
 import QRCode from "react-qr-code";
-import { doc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import db from '../firebase';
-import CameraComponent from './cameraComponent';
+import QRMeetComponent from './QRMeetComponent';
 
 class PlayerWolfPage extends Component {
     constructor(props) {
         super(props);
+        const params = new URLSearchParams(this.props.location.search);
+        const idPlayer = params.get("id");
         this.state = {
-            _id: "",
+            _id: idPlayer,
             name: "",
             class: "",
             tel: "",
             score: 0,
-            isAuthenticated: false,
             listIdGames: [],
             stateInGame: "",
-            actualGame: null
+            meetHistory: []
         };
     }
 
     componentDidMount() {
-        const params = new URLSearchParams(this.props.location.search);
-        const idPlayer = params.get("id");
-
-        const playerRef = doc(db, "players", idPlayer);
+        const playerRef = doc(db, "players", this.state._id);
         onSnapshot(playerRef, (doc) => {
             this.setState({
-                _id: doc.id,
                 name: doc.data().name,
                 class: doc.data().class,
                 tel: doc.data().tel_number,
                 score: doc.data().score,
-                isAuthenticated: doc.data().online,
                 stateInGame: doc.data().stateInGame,
-                actualGame: doc.data().gameRoom
+                meetHistory: doc.data().meetHistory
             });
 
             if (doc.data().stateInGame === "") {
@@ -43,66 +39,49 @@ class PlayerWolfPage extends Component {
         });
     }
 
-    handleBack = async () => {
-        const playerRef = doc(db, "players", this.state._id);
-        const playerSnap = await getDoc(playerRef);
-        if (playerSnap.data().gameRoom !== null) {
-            const gameRoomRef = doc(db, "gamerooms", playerSnap.data().gameRoom.id);
-            const gameRoomSnap = await getDoc(gameRoomRef);
-            var listPlayersInRoom = gameRoomSnap.data().listPlayers;
-            listPlayersInRoom = listPlayersInRoom.filter(playerId => playerId !== playerSnap.id);
-            await updateDoc(gameRoomRef, {
-                listPlayers: listPlayersInRoom
-            });
-            await updateDoc(playerRef, {
-                gameRoom: null,
-                stateInGame: ""
-            });
-        }
+    handleMeetButton = () => {
+        document.getElementById("meetingBox").style.display = "block";
+        document.getElementById("meetButton").disabled = true;
     }
 
-    handleLogOut = async () => {
-        const playerRef = doc(db, "players", this.state._id);
-        const playerSnap = await getDoc(playerRef);
-        if (playerSnap.data().gameRoom !== null) {
-            const gameRoomRef = doc(db, "gamerooms", playerSnap.data().gameRoom.id);
-            const gameRoomSnap = await getDoc(gameRoomRef);
-            var listPlayersInRoom = gameRoomSnap.data().listPlayers;
-            listPlayersInRoom = listPlayersInRoom.filter(playerId => playerId !== playerSnap.id);
-            await updateDoc(gameRoomRef, {
-                listPlayers: listPlayersInRoom
-            });
-            await updateDoc(playerRef, {
-                gameRoom: null
-            });
-        }
-        // Set the "online" field of the current player to false
-        await updateDoc(playerRef, {
-            online: false
-        });
-        window.location = '/';
+    handleCancelButton = () => {
+        document.getElementById("meetingBox").style.display = "none";
+        document.getElementById("meetButton").disabled = false;
     }
-
 
     render() {
-        if (!this.state.isAuthenticated) return (<h1>Loading ...</h1>);
         return (
             <>
                 <div id="main">
                     <h2 className="Playing">
                         Welcome to the game of WOLF !!
                     </h2>
-                    <div style={{ height: "auto", margin: "0 auto", maxWidth: 128, width: "100%" }}>
+                    <h3>Your QR Code: </h3>
+                    <div style={{ height: "auto", margin: "0 auto", maxWidth: 300, width: "100%" }}>
                         <QRCode
-                        size={256}
-                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                        value={this.state._id}
-                        viewBox={`0 0 256 256`}
+                            size={500}
+                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                            value={this.state._id}
+                            viewBox={`0 0 256 256`}
                         />
                     </div>
-                    <CameraComponent />
-                    <button id="backButton" onClick={this.handleBack}>Back</button>
-                    <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
+                    <h3>Meeting history: </h3>
+                    <ul>
+                        {this.state.meetHistory.map((item, index) => {
+                            return (
+                                <li key={index}>
+                                    {item.time} - {item.name}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                    <br/><br/>
+
+                    <button id="meetButton" onClick={this.handleMeetButton}>Meet someone</button>
+                    <button id="cancelButton" onClick={this.handleCancelButton}>Cancel</button>
+                    <div id="meetingBox" style={{ display: "none" }}>
+                        <QRMeetComponent key={"QRMeet"} idPlayer={this.state._id}/>
+                    </div>
                 </div>
             </>
         );

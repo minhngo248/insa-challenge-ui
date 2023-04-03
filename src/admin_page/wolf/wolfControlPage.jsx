@@ -34,11 +34,10 @@ class WolfControlPage extends Component {
                 listAllPlayers.push({
                     _id: doc.id,
                     name: doc.data().name,
-                    scoreInGame: doc.data().scoreInGame["wolf"],
-                    // history: [],
+                    scoreInGame: doc.data().scoreInGame["wolf"]
                 });
             });
-    
+
             this.setState({
                 listPlayers: listAllPlayers
             });
@@ -46,7 +45,32 @@ class WolfControlPage extends Component {
     }
 
     async handleStartGame() {
-        await initScore(this.state.listPlayers);
+        document.getElementById("startGame").disabled = true;
+        document.getElementById("endGame").disabled = false;
+        alert("Game started!");
+        initScore(this.state.listPlayers);
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        await updateDoc(gameRoomRef, {
+            status: "Started"
+        });
+    }
+
+    async handleEndGame() {
+        document.getElementById("startGame").disabled = false;
+        document.getElementById("endGame").disabled = true;
+        alert("Game ended!");
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        // for (let i = 0; i < this.state.listPlayers.length; i++) {
+        //     const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+        //     await updateDoc(playerRef, {
+        //         stateInGame: "",
+        //         gameRoom: null
+        //     });
+        // }        
+        await updateDoc(gameRoomRef, {
+            status: "Not started",
+            listPlayers: []
+        });
     }
 
     async handleUpdateScore(player) {
@@ -59,16 +83,6 @@ class WolfControlPage extends Component {
         await updateDoc(playerRef, {
             "scoreInGame.wolf": player.scoreInGame
         });
-    }
-
-    async handleUpdateHistory(player) {
-        // const playerRef = doc(db, "players", player._id);
-        // console.log(player.historyWolf);
-        // const history = [...player.historyWolf, player.scoreWolf];
-        // await updateDoc(playerRef, {
-            // historyWolf: [...player.historyWolf, {"player.scoreWolf": 4}],
-        //     historyWolf: []
-        // });
     }
 
     handleLogOut = async () => {
@@ -93,8 +107,8 @@ class WolfControlPage extends Component {
                                 <th>Name</th>
                                 <th>Score</th>
                                 <th>Enter the score</th>
-                                <th>Update history</th>
-                            </tr> 
+                                <th>Kick out</th>
+                            </tr>
                         </thead>
                         <tbody>
                             {this.state.listPlayers.map((player, index) => (
@@ -106,15 +120,26 @@ class WolfControlPage extends Component {
                                         <input type={"number"} id={`score-${player._id}`} />
                                         <Button onClick={() => this.handleUpdateScore(player)}>Update Score</Button>
                                     </td>
-                                    <td>
-                                        <Button onClick={() => this.handleUpdateHistory(player)}>Update History</Button>
-                                    </td>
+                                    <td><Button onClick={async () => {
+                                        const playerRef = doc(db, "players", player._id);
+                                        await updateDoc(playerRef, {
+                                            gameRoom: null,
+                                            stateInGame: ""
+                                        });
+                                        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+                                        await updateDoc(gameRoomRef, {
+                                            listPlayers: this.state.listPlayers.map(player => player._id)
+                                        });
+                                    }}>Kick out</Button></td>
                                 </tr>
                             ))}
                         </tbody>
                     </Table>
-                    
-                    <Button id="Start Game" onClick={() => this.handleStartGame()}>Start Game</Button>
+
+                    <Button id="startGame" onClick={() => this.handleStartGame()}>Start Game</Button>
+                    <Button id="endGame" onClick={() => this.handleEndGame()}>End Game</Button>
+                    <br />
+                    <br />
                     <Button id="logOutButton" onClick={this.handleLogOut}>Log out</Button>
                 </div>
             </>
@@ -136,7 +161,7 @@ function initScore(listPlayers) {
     listPlayers.forEach(async (player, index) => {
         const playerRef = doc(db, "players", player._id);
         await updateDoc(playerRef, {
-            stateInGame: "Playing"
+            stateInGame: "Playing wolf"
         });
         if (indexInfection.includes(index)) {
             await updateDoc(playerRef, {

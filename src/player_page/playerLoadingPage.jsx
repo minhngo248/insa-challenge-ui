@@ -30,10 +30,9 @@ class PlayerLoadingPage extends Component {
                 actualGame: doc.data().gameRoom
             });
 
-            if (doc.data().stateInGame === "") {
+            if (doc.data().stateInGame === "" || doc.data().stateInGame === "Playing") {
                 window.location = `/player-page?id=${doc.id}`;
-            // } else if (doc.data().stateInGame == "Playing" && doc.data().gameRoom.name === "Wolf") {
-            } else if (doc.data().stateInGame === "Playing") {
+            } else if (doc.data().stateInGame === "Playing wolf") {
                 window.location = `/player-wolf-page?id=${doc.id}`;
             }
 
@@ -94,7 +93,7 @@ class PlayerLoadingPage extends Component {
                     <h2 className="Loading">
                         Waiting for all players to join...
                     </h2>
-                    <button id="logOutButton" onClick={this.handleBack}>Back</button>
+                    <button id="backButton" onClick={this.handleBack}>Back</button>
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
                 </div>
             </>

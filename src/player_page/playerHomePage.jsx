@@ -2,6 +2,9 @@ import React, { Component } from 'react';
 import CardComponent from './cardComponent';
 import { doc, updateDoc, onSnapshot, collection, query, getDoc } from "firebase/firestore";
 import db from '../firebase';
+import QRAccessGame from './QRAccessGame';
+import { Button } from 'react-bootstrap';
+import WolfCardComponent from './wolfCardComponent';
 
 class PlayerHomePage extends Component {
     constructor(props) {
@@ -14,6 +17,7 @@ class PlayerHomePage extends Component {
             score: 0,
             isAuthenticated: false,
             listIdGames: [],
+            idWolfGame: "",
             stateInGame: "",
             actualGame: null
         };
@@ -37,31 +41,41 @@ class PlayerHomePage extends Component {
             });
 
             if (doc.data().gameRoom === null) {
-                for (let i = 0; i < document.getElementsByClassName("inGameButton btn btn-primary").length; i++) {
-                    document.getElementsByClassName("inGameButton").item(i).disabled = false;
+                document.getElementById("inGameButton").disabled = false;
+                for (let i = 0; i < document.getElementsByClassName("outGameButton").length; i++) {
                     document.getElementsByClassName("outGameButton").item(i).style.display = "none";
                 }
             }
-            if (doc.data().stateInGame == "Loading") {
+            if (doc.data().stateInGame === "Loading") {
                 window.location = `/player-loading-page?idAd=${doc.id}`;
             }
         });
-        
+
         const q = query(collection(db, "gamerooms"));
         onSnapshot(q, (querySnapshot) => {
             var listGameRooms = [];
+            var idGameWolf = "";
             querySnapshot.forEach((doc) => {
-                listGameRooms.push({
-                    id: doc.id
-                });
+                if (doc.data().name === "Wolf") {
+                    idGameWolf = doc.id;
+                }
+                else {
+                    listGameRooms.push({
+                        id: doc.id
+                    });
+                }
             });
             this.setState({
-                listIdGames: listGameRooms
+                listIdGames: listGameRooms,
+                idWolfGame: idGameWolf
             });
         });
     }
 
-
+    handleCancelButton = async () => {
+        document.getElementById("inGameButton").disabled = false;
+        document.getElementById(`codeAccessBox`).style.display = "none";
+    }
 
     handleLogOut = async () => {
         const playerRef = doc(db, "players", this.state._id);
@@ -75,7 +89,8 @@ class PlayerHomePage extends Component {
                 listPlayers: listPlayersInRoom
             });
             await updateDoc(playerRef, {
-                gameRoom: null
+                gameRoom: null,
+                stateInGame: ""
             });
         }
         // Set the "online" field of the current player to false
@@ -95,16 +110,27 @@ class PlayerHomePage extends Component {
                 <div id="main">
                     <h2>Hello {this.state.name}</h2>
                     <p>
-                    <span>Your score: {this.state.score}</span><br />
+                        <span>Your score: {this.state.score}</span><br />
                     </p>
 
+                    <div id={`codeAccessBox`} className="codeAccessBox" style={{ display: "none" }}>
+                        <span>Scan QR Code to access game:</span><br />
+                        <QRAccessGame key={`QRAccess`} idPlayer={this.state._id} />
+                        <br />
+                        <button id={`cancelButton`} onClick={this.handleCancelButton}>Cancel</button>
+                    </div>
+
                     <h2>List of game rooms</h2>
+                    <Button id="inGameButton" disabled={false} variant="primary" onClick={() => {
+                        document.getElementById(`codeAccessBox`).style.display = "block";
+                        document.getElementById("inGameButton").disabled = true;
+                    }}> Join </Button>
                     {
                         this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
                     }
+                    <WolfCardComponent key={"wolfRoom"} idPlayer={this.state._id} idRoom={this.state.idWolfGame}/>
+                    <br/><br/><br/>
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
-
-
                 </div>
             </React.Fragment>
         );
