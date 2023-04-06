@@ -58,15 +58,7 @@ class WolfControlPage extends Component {
     async handleEndGame() {
         document.getElementById("startGame").disabled = false;
         document.getElementById("endGame").disabled = true;
-        alert("Game ended!");
-        
-        // for (let i = 0; i < this.state.listPlayers.length; i++) {
-        //     const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
-        //     await updateDoc(playerRef, {
-        //         stateInGame: "",
-        //         gameRoom: null
-        //     });
-        // }        
+        alert("Game ended!");     
         const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
         onSnapshot(q, (querySnapshot) => {
             querySnapshot.forEach(async (doc) => {
