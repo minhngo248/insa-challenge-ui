@@ -53,18 +53,16 @@ class QRAccessGame extends Component {
         }
         if (listPlayersInRoom.indexOf(this.state.idPlayer) === -1 && playerSnap.data().gameRoom === null) {
             listPlayersInRoom.push(this.state.idPlayer);
+            await updateDoc(gameRoomRef, {
+                listPlayers: listPlayersInRoom
+            });
             await updateDoc(playerRef, {
                 gameRoom: {
                     id: this.state.idRoom,
                     name: nameRoom
                 },
                 stateInGame: "Loading"
-            });
-
-            await updateDoc(gameRoomRef, {
-                listPlayers: listPlayersInRoom
-            });
-                
+            }); 
         } 
     }
 
