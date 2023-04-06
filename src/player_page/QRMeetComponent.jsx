@@ -60,7 +60,6 @@ class QRMeetComponent extends Component {
                     onScan={this.handleScan}
                     style={{ width: '100%' }}
                 />
-                <p>{this.state.result}</p>
             </div>
         );
     }

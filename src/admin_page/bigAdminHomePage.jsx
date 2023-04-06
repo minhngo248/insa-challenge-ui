@@ -68,7 +68,13 @@ class BigAdminHomePage extends Component {
             score: 0,
             online: false,
             gameRoom: null,
-            createdDate: Timestamp.now()
+            createdDate: Timestamp.now(),
+            stateInGame: "",
+            scoreInGame: {
+                wolf: 0,
+                hunter: 0
+            },
+            meetHistory: []
         };
         await addDoc(collection(db, "players"), playerData);
         alert("Player added successfully");

@@ -17,7 +17,7 @@ class AdminLogIn extends Component {
         querySnapshot.forEach(async (doc_query) => {
             isSignedIn = true;
             const adminRef = doc(db, "admins", doc_query.id);
-            // Set the "capital" field of the city 'DC'
+
             await updateDoc(adminRef, {
                 online: true
             });
