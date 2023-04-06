@@ -49,13 +49,12 @@ class WolfCardComponent extends Component {
         const listPlayersInRoom = gameRoomSnap.data().listPlayers;
         if (listPlayersInRoom.indexOf(this.state.idPlayer) === -1 && playerSnap.data().gameRoom === null) {
             listPlayersInRoom.push(this.state.idPlayer);
+            await updateDoc(gameRoomRef, {
+                listPlayers: listPlayersInRoom
+            });
             await updateDoc(playerRef, {
                 gameRoom: { id: this.state.idRoom, name: this.state.nameRoom },
                 stateInGame: "Loading"
-            });
-
-            await updateDoc(gameRoomRef, {
-                listPlayers: listPlayersInRoom
             });
         }
     }
