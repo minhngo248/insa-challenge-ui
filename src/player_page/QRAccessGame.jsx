@@ -46,11 +46,11 @@ class QRAccessGame extends Component {
         //     return;
         // }
         const listPlayersInRoom = gameRoomSnap.data().listPlayers;
-        // if (listPlayersInRoom.length === gameRoomSnap.data().maxPlayers) {
+        if (listPlayersInRoom.length === gameRoomSnap.data().maxPlayers) {
         //     van bi bug ////////////////
-        //     alert("This game is full");
-        //     return;
-        // }
+            alert("This game room is full");
+            return;
+        }
         if (listPlayersInRoom.indexOf(this.state.idPlayer) === -1 && playerSnap.data().gameRoom === null) {
             listPlayersInRoom.push(this.state.idPlayer);
             await updateDoc(playerRef, {

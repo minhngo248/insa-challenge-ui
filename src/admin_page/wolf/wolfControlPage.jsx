@@ -119,7 +119,6 @@ class WolfControlPage extends Component {
                                 <th>Name</th>
                                 <th>Score</th>
                                 <th>Enter the score</th>
-                                <th>Kick out</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -132,17 +131,6 @@ class WolfControlPage extends Component {
                                         <input type={"number"} id={`score-${player._id}`} />
                                         <Button onClick={() => this.handleUpdateScore(player)}>Update Score</Button>
                                     </td>
-                                    <td><Button onClick={async () => {
-                                        const playerRef = doc(db, "players", player._id);
-                                        await updateDoc(playerRef, {
-                                            gameRoom: null,
-                                            stateInGame: ""
-                                        });
-                                        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
-                                        await updateDoc(gameRoomRef, {
-                                            listPlayers: this.state.listPlayers.map(player => player._id)
-                                        });
-                                    }}>Kick out</Button></td>
                                 </tr>
                             ))}
                         </tbody>
