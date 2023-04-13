@@ -34,7 +34,9 @@ class WolfControlPage extends Component {
                 listAllPlayers.push({
                     _id: doc.id,
                     name: doc.data().name,
-                    scoreInGame: doc.data().scoreInGame["wolf"]
+                    scoreInGame: doc.data().scoreInGame["wolf"],
+                    vaccinations: doc.data().vaccinations,
+                    infections: doc.data().infections
                 });
             });
 
@@ -51,7 +53,22 @@ class WolfControlPage extends Component {
         initScore(this.state.listPlayers);
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
         await updateDoc(gameRoomRef, {
-            status: "Started"
+            status: "Started",
+            limScore: -1
+        });
+        this.state.listPlayers.forEach(async (player) => {
+            const playerRef = doc(db, "players", player._id);
+            await updateDoc(playerRef, {
+                vaccinations: 0,
+                infections: 0
+            });
+        });
+    }
+
+    async handleFinalRound() {
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        await updateDoc(gameRoomRef, {
+            limScore: -3
         });
     }
 
@@ -111,6 +128,8 @@ class WolfControlPage extends Component {
                                 <th>Name</th>
                                 <th>Score</th>
                                 <th>Enter the score</th>
+                                <th>Vaccinations</th>
+                                <th>Infections</th>
                                 <th>Kick out</th>
                             </tr>
                         </thead>
@@ -124,6 +143,8 @@ class WolfControlPage extends Component {
                                         <input type={"number"} id={`score-${player._id}`} />
                                         <Button onClick={() => this.handleUpdateScore(player)}>Update Score</Button>
                                     </td>
+                                    <td>{player.vaccinations}</td>
+                                    <td>{player.infections}</td>
                                     <td><Button onClick={async () => {
                                         const playerRef = doc(db, "players", player._id);
                                         await updateDoc(playerRef, {
@@ -141,6 +162,7 @@ class WolfControlPage extends Component {
                     </Table>
 
                     <Button id="startGame" onClick={() => this.handleStartGame()}>Start Game</Button>
+                    <Button id="FinalRound" onClick={() => this.handleFinalRound()}>Final Round</Button>
                     <Button id="endGame" onClick={() => this.handleEndGame()}>End Game</Button>
                     <br />
                     <br />
@@ -179,22 +201,22 @@ function initScore(listPlayers) {
     });
 }
 
-function calculateScore(score1, score2) {
-    var score = score1;
+// function calculateScore(score1, score2, lim) {
+//     var score = score1;
 
-    if (score2 <= -1) {
-        score -= 2;
-    } else if (score2 >= 1) {
-        score += 1;
-    } else {
-        if (score1 >= 0) {
-            score += 1;
-        }
-    }
+//     if (score2 <= -1) {
+//         score -= 2;
+//     } else if (score2 >= 1) {
+//         score += 1;
+//     } else {
+//         if (score1 >= 0) {
+//             score += 1;
+//         }
+//     }
 
-    if (score <= -1) score = -1;
+//     if (score <= -1) score = -1;
 
-    return score;
-}
+//     return score;
+// }
 
 export default WolfControlPage;

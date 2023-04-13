@@ -10,7 +10,8 @@ class BigAdminHomePage extends Component {
         this.state = {
             idAdmin: '',
             listPlayers: [],
-            isAuthenticated: false
+            isAuthenticated: false,
+            stateFinalGame: false
         };
     }
 
@@ -35,14 +36,42 @@ class BigAdminHomePage extends Component {
                     name: doc.data().name,
                     online: doc.data().online,
                     score: doc.data().score,
-                    gameRoom: doc.data().gameRoom
+                    gameRoom: doc.data().gameRoom,
+                    stateFinalGame: doc.data().stateFinalGame
                 });
             });
 
             this.setState({
-                listPlayers: listAllPlayers
+                listPlayers: listAllPlayers,
+                stateFinalGame: listAllPlayers[0].stateFinalGame
             });
         });
+    }
+
+    async handleHideFinalGame() {
+        console.log(this.state.stateFinalGame);
+        // this.setState({
+        //     stateFinalGame: false
+        // });
+        for (let i = 0; i < this.state.listPlayers.length; i++) {
+            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+            await updateDoc(playerRef, {
+                stateFinalGame: false
+            });
+        }
+    }
+
+    async handleShowFinalGame() {
+        console.log(this.state.stateFinalGame);
+        // super.setState({
+        //     stateFinalGame: true
+        // });
+        for (let i = 0; i < this.state.listPlayers.length; i++) {
+            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+            await updateDoc(playerRef, {
+                stateFinalGame: true
+            });
+        }
     }
 
     handleAddPlayerButton = async (e) => {
@@ -70,6 +99,7 @@ class BigAdminHomePage extends Component {
             gameRoom: null,
             createdDate: Timestamp.now(),
             stateInGame: "",
+            stateFinalGame: false,
             scoreInGame: {
                 wolf: 0,
                 hunter: 0
@@ -122,6 +152,11 @@ class BigAdminHomePage extends Component {
                             }
                         </tbody>
                     </Table>
+                    
+                    {this.state.stateFinalGame
+                        ? <Button id="hideFinalGame" onClick={() => this.handleHideFinalGame()}>Hide Final Game</Button>
+                        : <Button id="showFinalGame" onClick={() => this.handleShowFinalGame()}>Show Final Game</Button>
+                    }
 
                     <h3>Add a player</h3>
                     <form id="add-player-form">

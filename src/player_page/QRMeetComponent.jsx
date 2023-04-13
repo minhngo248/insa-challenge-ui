@@ -8,7 +8,8 @@ class QRMeetComponent extends Component {
         super(props);
         this.state = {
             idPlayer: this.props.idPlayer,
-            result: 'No result'
+            result: 'No result',
+            limScore: this.props.limScore
         };
     }
 
@@ -31,7 +32,8 @@ class QRMeetComponent extends Component {
                 time: time
             });
             await updateDoc(playerRef, {
-                meetHistory: meetHistory
+                meetHistory: meetHistory,
+                "scoreInGame.wolf": calculateScore(playerSnap.data().scoreInGame.wolf, playerMeetSnap.data().scoreInGame.wolf, this.state.limScore)
             });
             var meetHistory2 = playerMeetSnap.data().meetHistory;
             meetHistory2.push({
@@ -40,7 +42,8 @@ class QRMeetComponent extends Component {
                 time: time
             });
             await updateDoc(playerMeetRef, {
-                meetHistory: meetHistory2
+                meetHistory: meetHistory2,
+                "scoreInGame.wolf": calculateScore(playerMeetSnap.data().scoreInGame.wolf, playerSnap.data().scoreInGame.wolf, this.state.limScore)
             });
             this.setState({ result: data });
         }
@@ -63,6 +66,47 @@ class QRMeetComponent extends Component {
             </div>
         );
     }
+}
+
+function calculateScore(score1, score2, lim) {
+    var score = score1;
+
+    switch (lim) {
+        case -1:
+            if (score2 <= -1) {
+                score -= 2;
+            } else if (score2 >= 1) {
+                score += 1;
+            } else {
+                if (score1 >= 0) {
+                    score += 1;
+                }
+            }
+
+            if (score <= lim) score = lim;
+
+            break;
+            //return score;
+        case -3:
+            if (score2 <= -1) {
+                if (score1 >= 1) {
+                    score -= 2;
+                } else {
+                    score -= 1;
+                }
+            } else if (score2 >= 1) {
+                score += 1;
+            } else {
+                if (score1 >= 0) {
+                    score += 1;
+                }
+            }
+
+            if (score <= lim) score = lim;
+
+            break;
+    }
+    return score;
 }
 
 export default QRMeetComponent;

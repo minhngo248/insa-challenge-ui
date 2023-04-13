@@ -19,7 +19,8 @@ class PlayerHomePage extends Component {
             listIdGames: [],
             idWolfGame: "",
             stateInGame: "",
-            actualGame: null
+            actualGame: null,
+            stateFinalGame: false
         };
     }
 
@@ -37,7 +38,8 @@ class PlayerHomePage extends Component {
                 score: doc.data().score,
                 isAuthenticated: doc.data().online,
                 stateInGame: doc.data().stateInGame,
-                actualGame: doc.data().gameRoom
+                actualGame: doc.data().gameRoom,
+                stateFinalGame: doc.data().stateFinalGame
             });
 
             if (doc.data().gameRoom === null) {
@@ -121,14 +123,26 @@ class PlayerHomePage extends Component {
                     </div>
 
                     <h2>List of game rooms</h2>
-                    <Button id="inGameButton" disabled={false} variant="primary" onClick={() => {
+                    {this.state.stateFinalGame
+                        ? <WolfCardComponent key={"wolfRoom"} idPlayer={this.state._id} idRoom={this.state.idWolfGame}/>
+                        : <>
+                        <Button id="inGameButton" disabled={false} variant="primary" onClick={() => {
+                            document.getElementById(`codeAccessBox`).style.display = "block";
+                            document.getElementById("inGameButton").disabled = true;
+                        }}> Join </Button>
+                        {
+                            this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
+                        }
+                        </>
+                    }
+                    {/* <Button id="inGameButton" disabled={false} variant="primary" onClick={() => {
                         document.getElementById(`codeAccessBox`).style.display = "block";
                         document.getElementById("inGameButton").disabled = true;
                     }}> Join </Button>
                     {
                         this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
                     }
-                    <WolfCardComponent key={"wolfRoom"} idPlayer={this.state._id} idRoom={this.state.idWolfGame}/>
+                    <WolfCardComponent key={"wolfRoom"} idPlayer={this.state._id} idRoom={this.state.idWolfGame}/> */}
                     <br/><br/><br/>
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
                 </div>
