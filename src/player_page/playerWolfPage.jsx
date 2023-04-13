@@ -20,7 +20,8 @@ class PlayerWolfPage extends Component {
             listIdGames: [],
             stateInGame: "",
             meetHistory: [],
-            limScore: -1
+            limScore: -1,
+            showQRScanner: false
         };
     }
 
@@ -49,13 +50,19 @@ class PlayerWolfPage extends Component {
     }
 
     handleMeetButton = () => {
-        document.getElementById("meetingBox").style.display = "block";
         document.getElementById("meetButton").disabled = true;
+        document.getElementById("cancelButton").disabled = false;
+        this.setState({
+            showQRScanner: true
+        });
     }
 
     handleCancelButton = () => {
-        document.getElementById("meetingBox").style.display = "none";
         document.getElementById("meetButton").disabled = false;
+        document.getElementById("cancelButton").disabled = true;
+        this.setState({
+            showQRScanner: false
+        });
     }
 
     render() {
@@ -96,9 +103,10 @@ class PlayerWolfPage extends Component {
 
                     <button id="meetButton" onClick={this.handleMeetButton}>Meet someone</button>
                     <button id="cancelButton" onClick={this.handleCancelButton}>Cancel</button>
-                    <div id="meetingBox" style={{ display: "none" }}>
+                    {this.state.showQRScanner ?
+                    <div id="meetingBox">
                         <QRMeetComponent key={"QRMeet"} idPlayer={this.state._id} limScore={this.state.limScore}/>
-                    </div>
+                    </div> : null}
                 </div>
             </>
         );

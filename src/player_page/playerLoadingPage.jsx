@@ -11,7 +11,7 @@ class PlayerLoadingPage extends Component {
             score: 0,
             isAuthenticated: false,
             stateInGame: "",
-            actualGame: null
+            actualGame: ""
         };
     }
 
