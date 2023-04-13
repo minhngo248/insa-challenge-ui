@@ -33,7 +33,7 @@ class PlayerLoadingPage extends Component {
             if (doc.data().stateInGame === "" || doc.data().stateInGame === "Playing") {
                 window.location = `/player-page?id=${doc.id}`;
             } else if (doc.data().stateInGame === "Playing wolf") {
-                window.location = `/player-wolf-page?id=${doc.id}`;
+                window.location = `/player-wolf-page?id=${doc.id}&idGr=KCx0sRAZpccfwWhjK0ih`;
             }
 
         });

@@ -9,15 +9,18 @@ class PlayerWolfPage extends Component {
         super(props);
         const params = new URLSearchParams(this.props.location.search);
         const idPlayer = params.get("id");
+        const idGameRoom = params.get("idGr");
         this.state = {
             _id: idPlayer,
+            idGameRoom: idGameRoom,
             name: "",
             class: "",
             tel: "",
             score: 0,
             listIdGames: [],
             stateInGame: "",
-            meetHistory: []
+            meetHistory: [],
+            limScore: -1
         };
     }
 
@@ -36,6 +39,12 @@ class PlayerWolfPage extends Component {
             if (doc.data().stateInGame === "") {
                 window.location = `/player-page?id=${doc.id}`;
             }
+        });
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        onSnapshot(gameRoomRef, (doc) => {
+            this.setState({
+                limScore: doc.data().limScore
+            });
         });
     }
 
@@ -80,7 +89,7 @@ class PlayerWolfPage extends Component {
                     <button id="meetButton" onClick={this.handleMeetButton}>Meet someone</button>
                     <button id="cancelButton" onClick={this.handleCancelButton}>Cancel</button>
                     <div id="meetingBox" style={{ display: "none" }}>
-                        <QRMeetComponent key={"QRMeet"} idPlayer={this.state._id}/>
+                        <QRMeetComponent key={"QRMeet"} idPlayer={this.state._id} limScore={this.state.limScore}/>
                     </div>
                 </div>
             </>
