@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { doc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import db from '../firebase';
 
 class PlayerLoadingPage extends Component {
@@ -8,37 +8,33 @@ class PlayerLoadingPage extends Component {
         this.state = {
             _id: "",
             name: "",
-            score: 0,
             isAuthenticated: false,
-            stateInGame: "",
-            actualGame: null
+            score: 0,
+            stateInGame: ""
         };
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         const params = new URLSearchParams(this.props.location.search);
         const idPlayer = params.get("idAd");
 
         const playerRef = doc(db, "players", idPlayer);
-        onSnapshot(playerRef, (doc) => {
-            this.setState({
-                _id: doc.id,
-                name: doc.data().name,
-                score: doc.data().score,
-                isAuthenticated: doc.data().online,
-                stateInGame: doc.data().stateInGame,
-                actualGame: doc.data().gameRoom
-            });
-
-            if (doc.data().stateInGame === "" || doc.data().stateInGame === "Playing") {
-                window.location = `/player-page?id=${doc.id}`;
-            } else if (doc.data().stateInGame === "Playing wolf") {
-                window.location = `/player-wolf-page?id=${doc.id}&idGr=KCx0sRAZpccfwWhjK0ih`;
-            }
-
+        const playerSnap = await getDoc(playerRef);
+        this.setState({
+            _id: idPlayer,
+            name: playerSnap.data().name,
+            isAuthenticated: playerSnap.data().online,
+            score: playerSnap.data().score,
+            stateInGame: playerSnap.data().stateInGame
         });
-        
+
+        if (playerSnap.data().stateInGame === "" || playerSnap.data().stateInGame === "Playing") {
+            window.location = `/player-page?id=${playerSnap.id}`;
+        } else if (playerSnap.data().stateInGame === "Playing wolf") {
+            window.location = `/player-wolf-page?id=${playerSnap.id}&idGr=KCx0sRAZpccfwWhjK0ih`;
+        }
     }
+        
 
     handleBack = async () => {
         const playerRef = doc(db, "players", this.state._id);
@@ -87,7 +83,7 @@ class PlayerLoadingPage extends Component {
                 <div id="main">
                     <h1>Hello {this.state.name}</h1>
                     <p>
-                    <span>Your score: {this.state.score}</span><br />
+                        <span>Your score: {this.state.score}</span><br />
                     </p>
                     <h1>Game room: {this.state.actualGame.name}</h1>
                     <h2 className="Loading">

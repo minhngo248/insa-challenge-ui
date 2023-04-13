@@ -19,6 +19,7 @@ class PlayerHomePage extends Component {
             listIdGames: [],
             idWolfGame: "",
             stateInGame: "",
+            showQRScanner: false,
             actualGame: null,
             stateFinalGame: false
         };
@@ -43,7 +44,6 @@ class PlayerHomePage extends Component {
             });
 
             if (doc.data().gameRoom === null) {
-                document.getElementById("inGameButton").disabled = false;
                 for (let i = 0; i < document.getElementsByClassName("outGameButton").length; i++) {
                     document.getElementsByClassName("outGameButton").item(i).style.display = "none";
                 }
@@ -74,9 +74,20 @@ class PlayerHomePage extends Component {
         });
     }
 
+    handleJoinGameButton = async () => {
+        document.getElementById("inGameButton").disabled = true;
+        document.getElementById("cancelButton").disabled = false;
+        this.setState({
+            showQRScanner: true
+        });
+    }
+
     handleCancelButton = async () => {
         document.getElementById("inGameButton").disabled = false;
-        document.getElementById(`codeAccessBox`).style.display = "none";
+        document.getElementById("cancelButton").disabled = true;
+        this.setState({
+            showQRScanner: false
+        });
     }
 
     handleLogOut = async () => {
@@ -115,34 +126,26 @@ class PlayerHomePage extends Component {
                         <span>Your score: {this.state.score}</span><br />
                     </p>
 
-                    <div id={`codeAccessBox`} className="codeAccessBox" style={{ display: "none" }}>
+                    {this.state.showQRScanner ?
+                    <div id={`codeAccessBox`}>
                         <span>Scan QR Code to access game:</span><br />
                         <QRAccessGame key={`QRAccess`} idPlayer={this.state._id} />
-                        <br />
-                        <button id={`cancelButton`} onClick={this.handleCancelButton}>Cancel</button>
-                    </div>
+                        <br />    
+                    </div> : null}
+
 
                     <h2>List of game rooms</h2>
                     {this.state.stateFinalGame
                         ? <WolfCardComponent key={"wolfRoom"} idPlayer={this.state._id} idRoom={this.state.idWolfGame}/>
                         : <>
-                        <Button id="inGameButton" disabled={false} variant="primary" onClick={() => {
-                            document.getElementById(`codeAccessBox`).style.display = "block";
-                            document.getElementById("inGameButton").disabled = true;
-                        }}> Join </Button>
+                        <Button id={"inGameButton"} disabled={false} onClick={this.handleJoinGameButton}> Join </Button>
+                        <Button id={"cancelButton"} onClick={this.handleCancelButton}>Cancel</Button>
                         {
                             this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
                         }
                         </>
                     }
-                    {/* <Button id="inGameButton" disabled={false} variant="primary" onClick={() => {
-                        document.getElementById(`codeAccessBox`).style.display = "block";
-                        document.getElementById("inGameButton").disabled = true;
-                    }}> Join </Button>
-                    {
-                        this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
-                    }
-                    <WolfCardComponent key={"wolfRoom"} idPlayer={this.state._id} idRoom={this.state.idWolfGame}/> */}
+    
                     <br/><br/><br/>
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
                 </div>
