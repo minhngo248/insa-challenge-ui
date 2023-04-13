@@ -27,7 +27,7 @@ class PlayerLoadingPage extends Component {
                 score: doc.data().score,
                 isAuthenticated: doc.data().online,
                 stateInGame: doc.data().stateInGame,
-                actualGame: doc.data().gameRoom
+                actualGame: doc.data().gameRoom.name
             });
 
             if (doc.data().stateInGame === "" || doc.data().stateInGame === "Playing") {
@@ -89,7 +89,7 @@ class PlayerLoadingPage extends Component {
                     <p>
                     <span>Your score: {this.state.score}</span><br />
                     </p>
-                    <h1>Game room: {this.state.actualGame.name}</h1>
+                    <h1>Game room: {this.state.actualGame}</h1>
                     <h2 className="Loading">
                         Waiting for all players to join...
                     </h2>
