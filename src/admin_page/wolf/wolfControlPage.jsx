@@ -93,7 +93,7 @@ class WolfControlPage extends Component {
         }
     }
 
-    async handleEndGame() {
+    handleEndGame = async () => {
         document.getElementById("startGame").disabled = false;
         document.getElementById("endGame").disabled = true;
         alert("Game ended!");     
@@ -120,7 +120,6 @@ class WolfControlPage extends Component {
         if (score === "") return;
         // const oldScore = player.scoreInGame;
         player.scoreInGame = parseInt(score);
-        // console.log(this.state.listPlayers);
         const playerRef = doc(db, "players", player._id);
         await updateDoc(playerRef, {
             "scoreInGame.wolf": player.scoreInGame
@@ -193,7 +192,7 @@ class WolfControlPage extends Component {
                         : <Button id="pause" onClick={() => this.handlePause()}>Pause</Button>
                     }
                     <Button id="finalRound" onClick={() => this.handleFinalRound()}>Final Round</Button>
-                    <Button id="endGame" onClick={() => this.handleEndGame()}>End Game</Button>
+                    <Button id="endGame" onClick={this.handleEndGame}>End Game</Button>
                     <br />
                     <br />
                     <Button id="logOutButton" onClick={this.handleLogOut}>Log out</Button>

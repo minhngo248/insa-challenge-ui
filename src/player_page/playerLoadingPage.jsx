@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
-import { doc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
 import db from '../firebase';
 
 class PlayerLoadingPage extends Component {
     constructor(props) {
         super(props);
+        const params = new URLSearchParams(this.props.location.search);
+        const idPlayer = params.get("idAd");
         this.state = {
-            _id: "",
+            _id: idPlayer,
             name: "",
             score: 0,
             isAuthenticated: false,
@@ -15,26 +17,22 @@ class PlayerLoadingPage extends Component {
         };
     }
 
-    async componentDidMount() {
-        const params = new URLSearchParams(this.props.location.search);
-        const idPlayer = params.get("idAd");
-
-        const playerRef = doc(db, "players", idPlayer);
-        const playerSnap = await getDoc(playerRef);
-        this.setState({
-            _id: playerSnap.id,
-            name: playerSnap.data().name,
-            score: playerSnap.data().score,
-            isAuthenticated: playerSnap.data().online,
-            stateInGame: playerSnap.data().stateInGame,
-            actualGame: playerSnap.data().gameRoom
+    componentDidMount() {
+        const playerRef = doc(db, "players", this.state._id);
+        onSnapshot(playerRef, (doc) => {
+            this.setState({
+                name: doc.data().name,
+                score: doc.data().score,
+                isAuthenticated: doc.data().online,
+                stateInGame: doc.data().stateInGame,
+                actualGame: doc.data().gameRoom
+            });
+            if (doc.data().stateInGame === "" || doc.data().stateInGame === "Playing") {
+                window.location = `/player-page?id=${doc.id}`;
+            } else if (doc.data().stateInGame === "Playing wolf") {
+                window.location = `/player-wolf-page?id=${doc.id}&idGr=KCx0sRAZpccfwWhjK0ih`;
+            }
         });
-
-        if (playerSnap.data().stateInGame === "" || playerSnap.data().stateInGame === "Playing") {
-            window.location = `/player-page?id=${playerSnap.id}`;
-        } else if (playerSnap.data().stateInGame === "Playing wolf") {
-            window.location = `/player-wolf-page?id=${playerSnap.id}&idGr=KCx0sRAZpccfwWhjK0ih`;
-        }
     }
 
     handleBack = async () => {
