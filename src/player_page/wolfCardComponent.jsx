@@ -44,17 +44,15 @@ class WolfCardComponent extends Component {
 
         // charge data for this component
         const playerRef = doc(db, "players", this.state.idPlayer);
-        const playerSnap = await getDoc(playerRef);
-
+        await updateDoc(playerRef, {
+            gameRoom: { id: this.state.idRoom, name: this.state.nameRoom },
+            stateInGame: "Loading"
+        });
         const listPlayersInRoom = gameRoomSnap.data().listPlayers;
-        if (listPlayersInRoom.indexOf(this.state.idPlayer) === -1 && playerSnap.data().gameRoom === null) {
+        if (listPlayersInRoom.indexOf(this.state.idPlayer) === -1) {
             listPlayersInRoom.push(this.state.idPlayer);
             await updateDoc(gameRoomRef, {
                 listPlayers: listPlayersInRoom
-            });
-            await updateDoc(playerRef, {
-                gameRoom: { id: this.state.idRoom, name: this.state.nameRoom },
-                stateInGame: "Loading"
             });
         }
     }
@@ -79,7 +77,7 @@ class WolfCardComponent extends Component {
                 </Card>
 
                 <div id={`codeAccessBox${this.state.idRoom}`} className="codeAccessBox"
-                    style={{display: "none"}}>
+                    style={{ display: "none" }}>
                     <span>Access code:</span><br />
                     <input type="text" id={`inputCode${this.state.idRoom}`} />
                     <button id="accessRoomButton" onClick={this.handleAccessGameButton}>Validate</button>
