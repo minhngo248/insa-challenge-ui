@@ -77,9 +77,17 @@ class PlayerWolfPage extends Component {
                     <h3>Meeting history: </h3>
                     <ul>
                         {this.state.meetHistory.map((item, index) => {
+                            if (item.score) {
+                                return (
+                                    <li key={index}>
+                                        {item.time} - You went to the admin room. Your current score is {item.score} vaccine(s).
+                                    </li>
+                                );
+                            }
+
                             return (
                                 <li key={index}>
-                                    {item.time} - {item.name}
+                                    {item.time} - You met {item.name}.
                                 </li>
                             );
                         })}

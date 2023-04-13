@@ -20,12 +20,21 @@ class QRMeetComponent extends Component {
             var meetHistory = playerSnap.data().meetHistory;
             var person = meetHistory.find(person => person["_id"] === data);
             if (person !== undefined) {
+                alert("Vous avez déjà rencontré cette personne");
                 return;
             }
             var date = new Date();
             var time = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
             const playerMeetRef = doc(db, "players", data);
             const playerMeetSnap = await getDoc(playerMeetRef);
+
+            var score1 = calculateScore(playerSnap.data().scoreInGame.wolf, playerMeetSnap.data().scoreInGame.wolf, this.state.limScore);
+            var score2 = calculateScore(playerMeetSnap.data().scoreInGame.wolf, playerSnap.data().scoreInGame.wolf, this.state.limScore);
+            var vaccinations1 = calculateVaccinations(playerSnap.data().scoreInGame.wolf, playerMeetSnap.data().scoreInGame.wolf, playerSnap.data().vaccinations);
+            var vaccinations2 = calculateVaccinations(playerMeetSnap.data().scoreInGame.wolf, playerSnap.data().scoreInGame.wolf, playerMeetSnap.data().vaccinations);
+            var infections1 = calculateInfections(playerSnap.data().scoreInGame.wolf, playerMeetSnap.data().scoreInGame.wolf, playerSnap.data().infections);
+            var infections2 = calculateInfections(playerMeetSnap.data().scoreInGame.wolf, playerSnap.data().scoreInGame.wolf, playerMeetSnap.data().infections);
+
             meetHistory.push({
                 _id: data,
                 name: playerMeetSnap.data().name,
@@ -33,7 +42,9 @@ class QRMeetComponent extends Component {
             });
             await updateDoc(playerRef, {
                 meetHistory: meetHistory,
-                "scoreInGame.wolf": calculateScore(playerSnap.data().scoreInGame.wolf, playerMeetSnap.data().scoreInGame.wolf, this.state.limScore)
+                "scoreInGame.wolf": score1,
+                vaccinations: vaccinations1,
+                infections: infections1
             });
             var meetHistory2 = playerMeetSnap.data().meetHistory;
             meetHistory2.push({
@@ -43,7 +54,9 @@ class QRMeetComponent extends Component {
             });
             await updateDoc(playerMeetRef, {
                 meetHistory: meetHistory2,
-                "scoreInGame.wolf": calculateScore(playerMeetSnap.data().scoreInGame.wolf, playerSnap.data().scoreInGame.wolf, this.state.limScore)
+                "scoreInGame.wolf": score2,
+                vaccinations: vaccinations2,
+                infections: infections2
             });
             this.setState({ result: data });
         }
@@ -107,6 +120,20 @@ function calculateScore(score1, score2, lim) {
             break;
     }
     return score;
+}
+
+function calculateVaccinations(score1, score2, vaccinations) {
+    if (score1 >= 0 && score2 >= 0) {
+        return vaccinations + 1;
+    }
+    return vaccinations;
+}
+
+function calculateInfections(score1, score2, infections) {
+    if (score1 <= -1 && score2 >= 0) {
+        return infections + 1;
+    }
+    return infections;
 }
 
 export default QRMeetComponent;

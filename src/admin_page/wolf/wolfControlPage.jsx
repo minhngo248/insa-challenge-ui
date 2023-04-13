@@ -16,6 +16,7 @@ class WolfControlPage extends Component {
             idGameRoom: idGameRoom,
             nameGameRoom: '',
             isAuthenticated: false,
+            stateInGame: ''
         }
     }
 
@@ -36,12 +37,14 @@ class WolfControlPage extends Component {
                     name: doc.data().name,
                     scoreInGame: doc.data().scoreInGame["wolf"],
                     vaccinations: doc.data().vaccinations,
-                    infections: doc.data().infections
+                    infections: doc.data().infections,
+                    stateInGame: doc.data().stateInGame
                 });
             });
 
             this.setState({
-                listPlayers: listAllPlayers
+                listPlayers: listAllPlayers,
+                stateInGame: listAllPlayers[0].stateInGame
             });
         });
     }
@@ -70,6 +73,24 @@ class WolfControlPage extends Component {
         await updateDoc(gameRoomRef, {
             limScore: -3
         });
+    }
+
+    async handlePause() {
+        for (let i = 0; i < this.state.listPlayers.length; i++) {
+            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+            await updateDoc(playerRef, {
+                stateInGame: "Paused"
+            });
+        }
+    }
+
+    async handleContinue() {
+        for (let i = 0; i < this.state.listPlayers.length; i++) {
+            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+            await updateDoc(playerRef, {
+                stateInGame: "Playing wolf"
+            });
+        }
     }
 
     async handleEndGame() {
@@ -106,6 +127,21 @@ class WolfControlPage extends Component {
         });
     }
 
+    async handleUpdateHistory(player) {
+        const playerRef = doc(db, "players", player._id);
+        const playerSnap = await getDoc(playerRef);
+        var meetHistory = playerSnap.data().meetHistory;
+        var date = new Date();
+        var time = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+        meetHistory.push({
+            time: time,
+            score: playerSnap.data().scoreInGame.wolf
+        });
+        await updateDoc(playerRef, {
+            meetHistory: meetHistory
+        });
+    }
+
     handleLogOut = async () => {
         const adminRef = doc(db, "admins", this.state.idAdmin);
         // set online to false
@@ -127,10 +163,11 @@ class WolfControlPage extends Component {
                                 <th>#</th>
                                 <th>Name</th>
                                 <th>Score</th>
-                                <th>Enter the score</th>
+                                <th>Enter Score</th>
                                 <th>Vaccinations</th>
                                 <th>Infections</th>
-                                <th>Kick out</th>
+                                <th>Update History</th>
+                                <th>Kick Out</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -145,6 +182,7 @@ class WolfControlPage extends Component {
                                     </td>
                                     <td>{player.vaccinations}</td>
                                     <td>{player.infections}</td>
+                                    <td><Button onClick={() => this.handleUpdateHistory(player)}>Update History</Button></td>
                                     <td><Button onClick={async () => {
                                         const playerRef = doc(db, "players", player._id);
                                         await updateDoc(playerRef, {
@@ -162,7 +200,11 @@ class WolfControlPage extends Component {
                     </Table>
 
                     <Button id="startGame" onClick={() => this.handleStartGame()}>Start Game</Button>
-                    <Button id="FinalRound" onClick={() => this.handleFinalRound()}>Final Round</Button>
+                    {this.state.stateInGame === "Paused"
+                        ? <Button id="continue" onClick={() => this.handleContinue()}>Continue</Button>
+                        : <Button id="pause" onClick={() => this.handlePause()}>Pause</Button>
+                    }
+                    <Button id="finalRound" onClick={() => this.handleFinalRound()}>Final Round</Button>
                     <Button id="endGame" onClick={() => this.handleEndGame()}>End Game</Button>
                     <br />
                     <br />
@@ -201,22 +243,5 @@ function initScore(listPlayers) {
     });
 }
 
-// function calculateScore(score1, score2, lim) {
-//     var score = score1;
-
-//     if (score2 <= -1) {
-//         score -= 2;
-//     } else if (score2 >= 1) {
-//         score += 1;
-//     } else {
-//         if (score1 >= 0) {
-//             score += 1;
-//         }
-//     }
-
-//     if (score <= -1) score = -1;
-
-//     return score;
-// }
 
 export default WolfControlPage;
