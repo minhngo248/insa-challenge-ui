@@ -167,7 +167,6 @@ class WolfControlPage extends Component {
                                 <th>Vaccinations</th>
                                 <th>Infections</th>
                                 <th>Update History</th>
-                                <th>Kick Out</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -183,17 +182,6 @@ class WolfControlPage extends Component {
                                     <td>{player.vaccinations}</td>
                                     <td>{player.infections}</td>
                                     <td><Button onClick={() => this.handleUpdateHistory(player)}>Update History</Button></td>
-                                    <td><Button onClick={async () => {
-                                        const playerRef = doc(db, "players", player._id);
-                                        await updateDoc(playerRef, {
-                                            gameRoom: null,
-                                            stateInGame: ""
-                                        });
-                                        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
-                                        await updateDoc(gameRoomRef, {
-                                            listPlayers: this.state.listPlayers.map(player => player._id)
-                                        });
-                                    }}>Kick out</Button></td>
                                 </tr>
                             ))}
                         </tbody>
