@@ -17,7 +17,8 @@ class WolfControlPage extends Component {
             nameGameRoom: "",
             isAuthenticated: false,
             status: "",
-            round: 1
+            round: 0,
+            wordlists: []
         }
     }
 
@@ -33,7 +34,17 @@ class WolfControlPage extends Component {
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
         onSnapshot(gameRoomRef, (doc) => {
             this.setState({
-                status: doc.data().status
+                status: doc.data().status,
+                round: doc.data().round
+            });
+        });
+
+        const queryWord = query(collection(db, "wordlists"), where("round", "==", this.state.round));
+        onSnapshot(queryWord, (querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                this.setState({
+                    wordlists: doc.data().wordlists
+                });
             });
         });
 

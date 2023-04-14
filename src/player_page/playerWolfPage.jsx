@@ -22,7 +22,8 @@ class PlayerWolfPage extends Component {
             isWolf: false,
             showQRScanner: false,
             round: 0,
-            wordlist: []
+            wordlist: [],
+            keyword: ""
         };
     }
 
@@ -40,7 +41,7 @@ class PlayerWolfPage extends Component {
                     score: doc.data().score,
                     stateInGame: doc.data().stateInGame,
                     meetHistory: doc.data().meetHistory,
-                    isWolf: doc.data().isWolf,
+                    isWolf: doc.data().isWolf
                 });
             }
 
@@ -52,7 +53,8 @@ class PlayerWolfPage extends Component {
         const gameRoomRef = doc(db, "gameRooms", this.state.idGameRoom);
         onSnapshot(gameRoomRef, (doc) => {
             this.setState({
-                round: doc.data().round
+                round: doc.data().round,
+                keyword: doc.data().keyword
             });
         });
 
@@ -125,6 +127,14 @@ class PlayerWolfPage extends Component {
                             })}
                         </ul>
                     </div>
+
+                    <br /><br />
+                    {this.state.isWolf ?
+                        <div id="keyword">
+                            <h3>Keyword: </h3>
+                            <p>{this.state.keyword}</p>
+                        </div> : null
+                    }
 
                     <div id="meeting-history">
                         <h3>Meeting history: </h3>

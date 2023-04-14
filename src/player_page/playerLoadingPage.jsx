@@ -15,11 +15,11 @@ class PlayerLoadingPage extends Component {
         };
     }
 
-    async componentDidMount() {
+    componentDidMount() {
         const params = new URLSearchParams(this.props.location.search);
         const idPlayer = params.get("idAd");
         const playerRef = doc(db, "players", idPlayer);
-        onSnapshot(playerRef, async (doc) => { 
+        onSnapshot(playerRef, async (doc) => {
             this.setState({
                 _id: idPlayer,
                 name: doc.data().name,
@@ -28,12 +28,11 @@ class PlayerLoadingPage extends Component {
                 stateInGame: doc.data().stateInGame,
                 actualGame: doc.data().gameRoom
             });
-
-            if (doc.data().stateInGame === "") {
+            if (doc.stateInGame === "") {
                 window.location = `/player-page?id=${idPlayer}`;
-            } else if (doc.data().stateInGame === "Playing") {
+            } else if (doc.stateInGame === "Playing") {
                 window.location = `/player-ingame-page?id=${idPlayer}`;
-            } else if (doc.data().stateInGame === "Playing wolf") {
+            } else if (doc.stateInGame === "Playing wolf") {
                 window.location = `/player-wolf-page?id=${idPlayer}&idGr=KCx0sRAZpccfwWhjK0ih`;
             }
         });
