@@ -20,7 +20,7 @@ class PlayerWolfPage extends Component {
             listIdGames: [],
             stateInGame: "",
             meetHistory: [],
-            limScore: -1,
+            isWolf: false,
             showQRScanner: false
         };
     }
@@ -34,19 +34,15 @@ class PlayerWolfPage extends Component {
                 tel: doc.data().tel_number,
                 score: doc.data().score,
                 stateInGame: doc.data().stateInGame,
-                meetHistory: doc.data().meetHistory
+                meetHistory: doc.data().meetHistory,
+                isWolf: doc.data().isWolf
             });
 
             if (doc.data().stateInGame === "") {
                 window.location = `/player-page?id=${doc.id}`;
             }
         });
-        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
-        onSnapshot(gameRoomRef, (doc) => {
-            this.setState({
-                limScore: doc.data().limScore
-            });
-        });
+
     }
 
     handleMeetButton = () => {
@@ -72,6 +68,10 @@ class PlayerWolfPage extends Component {
                     <h2 className="Playing">
                         Welcome to the game of WOLF !!
                     </h2>
+                    {this.state.isWolf
+                        ? <h3 className="Playing">You are the WOLF !</h3>
+                        : <h3 className="Playing">You are not the WOLF !</h3>
+                    }
                     <h3>Your QR Code: </h3>
                     <div style={{ height: "auto", margin: "0 auto", maxWidth: 300, width: "100%" }}>
                         <QRCode
@@ -84,7 +84,7 @@ class PlayerWolfPage extends Component {
                     <h3>Meeting history: </h3>
                     <ul>
                         {this.state.meetHistory.map((item, index) => {
-                            if (item.score) {
+                            if (item.type === "admin") {
                                 return (
                                     <li key={index}>
                                         {item.time} - You went to the admin room. Your current score is {item.score} vaccine(s).

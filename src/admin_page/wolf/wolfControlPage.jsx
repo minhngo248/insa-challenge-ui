@@ -44,8 +44,6 @@ class WolfControlPage extends Component {
                     _id: doc.id,
                     name: doc.data().name,
                     scoreInGame: doc.data().scoreInGame["wolf"],
-                    vaccinations: doc.data().vaccinations,
-                    infections: doc.data().infections,
                     stateInGame: doc.data().stateInGame
                 });
             });
@@ -143,21 +141,6 @@ class WolfControlPage extends Component {
         });
     }
 
-    async handleUpdateHistory(player) {
-        const playerRef = doc(db, "players", player._id);
-        const playerSnap = await getDoc(playerRef);
-        var meetHistory = playerSnap.data().meetHistory;
-        var date = new Date();
-        var time = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
-        meetHistory.push({
-            time: time,
-            score: playerSnap.data().scoreInGame.wolf
-        });
-        await updateDoc(playerRef, {
-            meetHistory: meetHistory
-        });
-    }
-
     handleLogOut = async () => {
         const adminRef = doc(db, "admins", this.state.idAdmin);
         // set online to false
@@ -180,9 +163,6 @@ class WolfControlPage extends Component {
                                 <th>Name</th>
                                 <th>Score</th>
                                 <th>Enter Score</th>
-                                <th>Vaccinations</th>
-                                <th>Infections</th>
-                                <th>Update History</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -195,9 +175,6 @@ class WolfControlPage extends Component {
                                         <input type={"number"} id={`score-${player._id}`} />
                                         <Button onClick={() => this.handleUpdateScore(player)}>Update Score</Button>
                                     </td>
-                                    <td>{player.vaccinations}</td>
-                                    <td>{player.infections}</td>
-                                    <td><Button onClick={() => this.handleUpdateHistory(player)}>Update History</Button></td>
                                 </tr>
                             ))}
                         </tbody>
@@ -220,7 +197,7 @@ class WolfControlPage extends Component {
 }
 
 function initScore(listPlayers) {
-    var noInfection = parseInt(listPlayers.length * 0.15);
+    var noInfection = parseInt(listPlayers.length * 0.30);
     let indexInfection = [];
     if (noInfection <= 1) noInfection = 1;
     while (indexInfection.length < noInfection) {
@@ -233,15 +210,16 @@ function initScore(listPlayers) {
     listPlayers.forEach(async (player, index) => {
         const playerRef = doc(db, "players", player._id);
         await updateDoc(playerRef, {
-            stateInGame: "Playing wolf"
+            stateInGame: "Playing wolf",
+            "scoreInGame.wolf": 0
         });
         if (indexInfection.includes(index)) {
             await updateDoc(playerRef, {
-                "scoreInGame.wolf": -1
+                isWolf: true
             });
         } else {
             await updateDoc(playerRef, {
-                "scoreInGame.wolf": 0
+                isWolf: false
             });
         }
     });
