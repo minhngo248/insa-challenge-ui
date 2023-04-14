@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import db from '../firebase';
 
 class PlayerLoadingPage extends Component {
@@ -19,23 +19,24 @@ class PlayerLoadingPage extends Component {
         const params = new URLSearchParams(this.props.location.search);
         const idPlayer = params.get("idAd");
         const playerRef = doc(db, "players", idPlayer);
-        const playerSnap = await getDoc(playerRef);
-        this.setState({
-            _id: idPlayer,
-            name: playerSnap.data().name,
-            score: playerSnap.data().score,
-            isAuthenticated: playerSnap.data().online,
-            stateInGame: playerSnap.data().stateInGame,
-            actualGame: playerSnap.data().gameRoom
-        });
+        onSnapshot(playerRef, async (doc) => { 
+            this.setState({
+                _id: idPlayer,
+                name: doc.data().name,
+                score: doc.data().score,
+                isAuthenticated: doc.data().online,
+                stateInGame: doc.data().stateInGame,
+                actualGame: doc.data().gameRoom
+            });
 
-        if (playerSnap.data().stateInGame === "") {
-            window.location = `/player-page?id=${idPlayer}`;
-        } else if (playerSnap.data().stateInGame === "Playing") {
-            window.location = `/player-ingame-page?id=${idPlayer}`;
-        } else if (playerSnap.data().stateInGame === "Playing wolf") {
-            window.location = `/player-wolf-page?id=${idPlayer}&idGr=KCx0sRAZpccfwWhjK0ih`;
-        }
+            if (doc.data().stateInGame === "") {
+                window.location = `/player-page?id=${idPlayer}`;
+            } else if (doc.data().stateInGame === "Playing") {
+                window.location = `/player-ingame-page?id=${idPlayer}`;
+            } else if (doc.data().stateInGame === "Playing wolf") {
+                window.location = `/player-wolf-page?id=${idPlayer}&idGr=KCx0sRAZpccfwWhjK0ih`;
+            }
+        });
     }
 
     render() {

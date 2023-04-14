@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap';
-import { doc, onSnapshot, updateDoc, where, query, collection } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, where, query, collection, getDoc } from "firebase/firestore";
 import db from '../../firebase';
 
 class WolfControlPage extends Component {
@@ -16,7 +16,8 @@ class WolfControlPage extends Component {
             idGameRoom: idGameRoom,
             nameGameRoom: "",
             isAuthenticated: false,
-            status: ""
+            status: "",
+            round: 1
         }
     }
 
@@ -75,24 +76,11 @@ class WolfControlPage extends Component {
         });
     }
 
-    async handleFinalRound() {
+    async handleNextRound() {
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
         await updateDoc(gameRoomRef, {
-            limScore: -3
+            round: 2
         });
-    }
-
-    async handlePause() {
-        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
-        await updateDoc(gameRoomRef, {
-            status: "Paused"
-        });
-        for (let i = 0; i < this.state.listPlayers.length; i++) {
-            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
-            await updateDoc(playerRef, {
-                stateInGame: "Paused"
-            });
-        }
     }
 
     async handleContinue() {
@@ -141,6 +129,24 @@ class WolfControlPage extends Component {
         });
     }
 
+    handleEnterScore = async () => {
+        for (let i = 0; i < this.state.listPlayers.length; i++) {
+            const score = document.getElementById(`score1-${this.state.listPlayers[i]._id}`).value;
+            if (score === "") continue;
+            const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+            const playerSnap = await getDoc(playerRef);
+            var scoreInGame = playerSnap.data().scoreInGame;
+            scoreInGame["wolf"] = parseInt(score);
+            await updateDoc(playerRef, {
+                scoreInGame: scoreInGame
+            });
+
+            await updateDoc(playerRef, {
+                score: calculateTotalScore(scoreInGame)
+            });
+        }
+    }
+
     handleLogOut = async () => {
         const adminRef = doc(db, "admins", this.state.idAdmin);
         // set online to false
@@ -170,7 +176,7 @@ class WolfControlPage extends Component {
                                 <tr key={index}>
                                     <td>{index + 1}</td>
                                     <td>{player.name}</td>
-                                    <td>{player.scoreInGame}</td>
+                                    <td id={`score1-${player._id}`}>{player.scoreInGame}</td>
                                     <td>
                                         <input type={"number"} id={`score-${player._id}`} />
                                         <Button onClick={() => this.handleUpdateScore(player)}>Update Score</Button>
@@ -180,12 +186,9 @@ class WolfControlPage extends Component {
                         </tbody>
                     </Table>
 
+                    <Button onClick={this.handleEnterScore}>Validate the score</Button><br /><br />
                     <Button id="startGame" onClick={() => this.handleStartGame()}>Start Game</Button>
-                    {this.state.stateInGame === "Paused"
-                        ? <Button id="continue" onClick={() => this.handleContinue()}>Continue</Button>
-                        : <Button id="pause" onClick={() => this.handlePause()}>Pause</Button>
-                    }
-                    <Button id="finalRound" onClick={() => this.handleFinalRound()}>Final Round</Button>
+                    <Button id="nextRound" onClick={() => this.handleNextRound()}>Next Round</Button>
                     <Button id="endGame" onClick={this.handleEndGame}>End Game</Button>
                     <br />
                     <br />
@@ -225,5 +228,14 @@ function initScore(listPlayers) {
     });
 }
 
-// Hi
+function calculateTotalScore(scoreInGame) {
+    var totalScore = 0;
+    for (let key in scoreInGame) {
+        //if (key !== "wolf") {
+        totalScore += scoreInGame[key];
+        //}
+    };
+    return totalScore;
+}
+
 export default WolfControlPage;

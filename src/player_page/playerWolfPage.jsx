@@ -29,15 +29,20 @@ class PlayerWolfPage extends Component {
     componentDidMount() {
         const playerRef = doc(db, "players", this.state._id);
         onSnapshot(playerRef, (doc) => {
-            this.setState({
-                name: doc.data().name,
-                class: doc.data().class,
-                tel: doc.data().tel_number,
-                score: doc.data().score,
-                stateInGame: doc.data().stateInGame,
-                meetHistory: doc.data().meetHistory,
-                isWolf: doc.data().isWolf,
-            });
+            if (doc.data().stateInGame === "") {
+                alert(`Congratulations! \nYou gained ${this.state.score} points in this game!`);
+                window.location = `/player-page?id=${doc.id}`;
+            } else {
+                this.setState({
+                    name: doc.data().name,
+                    class: doc.data().class,
+                    tel: doc.data().tel_number,
+                    score: doc.data().score,
+                    stateInGame: doc.data().stateInGame,
+                    meetHistory: doc.data().meetHistory,
+                    isWolf: doc.data().isWolf,
+                });
+            }
 
             if (doc.data().stateInGame === "") {
                 window.location = `/player-page?id=${doc.id}`;
