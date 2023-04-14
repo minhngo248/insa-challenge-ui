@@ -230,5 +230,5 @@ function initScore(listPlayers) {
     });
 }
 
-
+// Hi
 export default WolfControlPage;
