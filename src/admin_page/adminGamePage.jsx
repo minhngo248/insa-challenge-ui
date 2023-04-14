@@ -3,6 +3,7 @@ import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap';
 import { doc, onSnapshot, updateDoc, where, query, collection, getDoc } from "firebase/firestore";
 import db from '../firebase';
+import QRCode from 'react-qr-code';
 
 class AdminGamePage extends Component {
     constructor(props) {
@@ -25,6 +26,13 @@ class AdminGamePage extends Component {
         this.setState({
             nameGameRoom: adminSnap.data().gameRoom.name,
             isAuthenticated: adminSnap.data().online
+        });
+
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        onSnapshot(gameRoomRef, (doc) => {
+            this.setState({
+                status: doc.data().status
+            });
         });
 
         const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
@@ -64,7 +72,7 @@ class AdminGamePage extends Component {
         document.getElementById("startGame").disabled = false;
         document.getElementById("endGame").disabled = true;
         alert("Game ended!");
-        
+
         const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
         onSnapshot(q, (querySnapshot) => {
             querySnapshot.forEach(async (doc) => {
@@ -86,8 +94,15 @@ class AdminGamePage extends Component {
             const score = document.getElementById(`score-${this.state.listPlayers[i]._id}`).value;
             if (score === "") continue;
             const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
+            const playerSnap = await getDoc(playerRef);
+            var scoreInGame = playerSnap.data().scoreInGame;
+            scoreInGame[`${this.state.nameGameRoom.toLowerCase()}`] = parseInt(score);
             await updateDoc(playerRef, {
-                score: parseInt(score)
+                scoreInGame: scoreInGame
+            });
+
+            await updateDoc(playerRef, {
+                score: calculateTotalScore(scoreInGame)
             });
         }
     }
@@ -145,11 +160,34 @@ class AdminGamePage extends Component {
                     <Button id={"endGame"} onClick={this.handleEndGame}>End Game</Button>
                     <br />
                     <br />
+                    <h1>QR Code to access game for players</h1>
+                    {
+                        <div style={{ height: "auto", margin: "0 auto", maxWidth: 300, width: "100%" }}>
+                            <QRCode
+                                size={500}
+                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                value={process.env[`REACT_APP_${this.state.idGameRoom}`]}
+                                viewBox={`0 0 256 256`}
+                            />
+                        </div>
+                    }
+                    <br />
+                    <br />
                     <Button id="logOutButton" onClick={this.handleLogOut}>Log out</Button>
                 </div>
             </React.Fragment>
         );
     }
+}
+
+function calculateTotalScore(scoreInGame) {
+    var totalScore = 0;
+    for (let key in scoreInGame) {
+        if (key !== "wolf") {
+            totalScore += scoreInGame[key];
+        }
+    };
+    return totalScore;
 }
 
 export default AdminGamePage;

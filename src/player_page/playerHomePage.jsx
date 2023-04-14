@@ -37,16 +37,12 @@ class PlayerHomePage extends Component {
                 name: doc.data().name,
                 class: doc.data().class,
                 tel: doc.data().tel_number,
-                score: calculateTotalScore(doc.data().scoreInGame),
+                score: doc.data().score,
                 scoreInGame: doc.data().scoreInGame,
                 isAuthenticated: doc.data().online,
                 stateInGame: doc.data().stateInGame,
                 actualGame: doc.data().gameRoom,
                 stateFinalGame: doc.data().stateFinalGame
-            });
-
-            await updateDoc(playerRef, {
-                score: calculateTotalScore(doc.data().scoreInGame)
             });
 
             if (doc.data().gameRoom === null) {
@@ -132,7 +128,7 @@ class PlayerHomePage extends Component {
                 <div id="main">
                     <h2>Hello {this.state.name}</h2>
                     <p>
-                        <span>Your score: {this.state.score}</span><br />
+                        <span>Your total score: {this.state.score}</span><br />
                     </p>
                     {this.state.showQRScanner ?
                         <div id={`codeAccessBox`}>
@@ -159,16 +155,6 @@ class PlayerHomePage extends Component {
             </React.Fragment>
         );
     }
-}
-
-function calculateTotalScore(scoreInGame) {
-    var totalScore = 0;
-    for (let key in scoreInGame) {
-        if (key !== "wolf") {
-            totalScore += scoreInGame[key];
-        }
-    };
-    return totalScore;
 }
 
 export default PlayerHomePage;

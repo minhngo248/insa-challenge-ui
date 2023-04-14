@@ -14,18 +14,26 @@ class WolfControlPage extends Component {
             idAdmin: idAdmin,
             listPlayers: [],
             idGameRoom: idGameRoom,
-            nameGameRoom: '',
+            nameGameRoom: "",
             isAuthenticated: false,
-            stateInGame: ''
+            status: ""
         }
     }
 
     async componentDidMount() {
         const adminRef = doc(db, "admins", this.state.idAdmin);
-        const adminSnap = await getDoc(adminRef);
-        this.setState({
-            nameGameRoom: adminSnap.data().gameRoom.name,
-            isAuthenticated: adminSnap.data().online
+        onSnapshot(adminRef, (doc) => {
+            this.setState({
+                nameGameRoom: doc.data().gameRoom.name,
+                isAuthenticated: doc.data().online
+            });
+        });
+
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        onSnapshot(gameRoomRef, (doc) => {
+            this.setState({
+                status: doc.data().status
+            });
         });
 
         const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
@@ -43,8 +51,7 @@ class WolfControlPage extends Component {
             });
 
             this.setState({
-                listPlayers: listAllPlayers,
-                stateInGame: listAllPlayers[0].stateInGame
+                listPlayers: listAllPlayers
             });
         });
     }
@@ -59,11 +66,13 @@ class WolfControlPage extends Component {
             status: "Started",
             limScore: -1
         });
-        this.state.listPlayers.forEach(async (player) => {
-            const playerRef = doc(db, "players", player._id);
-            await updateDoc(playerRef, {
-                vaccinations: 0,
-                infections: 0
+        const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
+        onSnapshot(q, (querySnapshot) => {
+            querySnapshot.forEach(async (doc) => {
+                await updateDoc(doc.ref, {
+                    vaccinations: 0,
+                    infections: 0
+                });
             });
         });
     }
@@ -76,6 +85,10 @@ class WolfControlPage extends Component {
     }
 
     async handlePause() {
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        await updateDoc(gameRoomRef, {
+            status: "Paused"
+        });
         for (let i = 0; i < this.state.listPlayers.length; i++) {
             const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
             await updateDoc(playerRef, {
@@ -85,6 +98,10 @@ class WolfControlPage extends Component {
     }
 
     async handleContinue() {
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
+        await updateDoc(gameRoomRef, {
+            status: "Started"
+        });
         for (let i = 0; i < this.state.listPlayers.length; i++) {
             const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
             await updateDoc(playerRef, {
@@ -96,7 +113,7 @@ class WolfControlPage extends Component {
     handleEndGame = async () => {
         document.getElementById("startGame").disabled = false;
         document.getElementById("endGame").disabled = true;
-        alert("Game ended!");     
+        alert("Game ended!");
         const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
         onSnapshot(q, (querySnapshot) => {
             querySnapshot.forEach(async (doc) => {
@@ -107,7 +124,7 @@ class WolfControlPage extends Component {
                 });
             });
         });
-        
+
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
         await updateDoc(gameRoomRef, {
             status: "Not started",
