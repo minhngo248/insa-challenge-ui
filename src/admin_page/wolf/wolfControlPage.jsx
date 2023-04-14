@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Table from 'react-bootstrap/Table';
 import { Button } from 'react-bootstrap';
-import { doc, onSnapshot, updateDoc, where, query, collection, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, where, query, collection } from "firebase/firestore";
 import db from '../../firebase';
 
 class WolfControlPage extends Component {

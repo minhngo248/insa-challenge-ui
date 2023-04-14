@@ -45,7 +45,7 @@ class PlayerHomePage extends Component {
                 stateFinalGame: doc.data().stateFinalGame
             });
 
-            if (doc.data().gameRoom === null) {
+            if (doc.data().gameRoom === null && document.getElementById("inGameButton") !== null) {
                 document.getElementById("inGameButton").disabled = false;
                 for (let i = 0; i < document.getElementsByClassName("outGameButton").length; i++) {
                     document.getElementsByClassName("outGameButton").item(i).style.display = "none";
