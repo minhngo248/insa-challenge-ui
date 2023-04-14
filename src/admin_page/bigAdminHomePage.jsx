@@ -102,7 +102,10 @@ class BigAdminHomePage extends Component {
             stateFinalGame: false,
             scoreInGame: {
                 wolf: 0,
-                hunter: 0
+                hunter: 0,
+                protector: 0,
+                witch: 0,
+                seer: 0
             },
             meetHistory: []
         };

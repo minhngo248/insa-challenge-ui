@@ -15,6 +15,7 @@ class PlayerHomePage extends Component {
             class: "",
             tel: "",
             score: 0,
+            scoreInGame: {},
             isAuthenticated: false,
             listIdGames: [],
             idWolfGame: "",
@@ -25,22 +26,27 @@ class PlayerHomePage extends Component {
         };
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         const params = new URLSearchParams(this.props.location.search);
         const idPlayer = params.get("id");
 
         const playerRef = doc(db, "players", idPlayer);
-        onSnapshot(playerRef, (doc) => {
+        onSnapshot(playerRef, async (doc) => {
             this.setState({
                 _id: doc.id,
                 name: doc.data().name,
                 class: doc.data().class,
                 tel: doc.data().tel_number,
-                score: doc.data().score,
+                score: calculateTotalScore(doc.data().scoreInGame),
+                scoreInGame: doc.data().scoreInGame,
                 isAuthenticated: doc.data().online,
                 stateInGame: doc.data().stateInGame,
                 actualGame: doc.data().gameRoom,
                 stateFinalGame: doc.data().stateFinalGame
+            });
+
+            await updateDoc(playerRef, {
+                score: calculateTotalScore(doc.data().scoreInGame)
             });
 
             if (doc.data().gameRoom === null) {
@@ -73,6 +79,8 @@ class PlayerHomePage extends Component {
                 idWolfGame: idGameWolf
             });
         });
+
+
     }
 
     handleInGameButton = async () => {
@@ -128,29 +136,39 @@ class PlayerHomePage extends Component {
                     </p>
                     {this.state.showQRScanner ?
                         <div id={`codeAccessBox`}>
-                        <span>Scan QR Code to access game:</span><br />
-                        <QRAccessGame key={`QRAccess`} idPlayer={this.state._id} />
-                        <br />
+                            <span>Scan QR Code to access game:</span><br />
+                            <QRAccessGame key={`QRAccess`} idPlayer={this.state._id} />
+                            <br />
                         </div> : null}
 
                     <h2>List of game rooms</h2>
                     {this.state.stateFinalGame
-                        ? <WolfCardComponent key={"wolfRoom"} idPlayer={this.state._id} idRoom={this.state.idWolfGame}/>
+                        ? <WolfCardComponent key={"wolfRoom"} idPlayer={this.state._id} idRoom={this.state.idWolfGame} />
                         : <>
-                        <Button id="inGameButton" variant="primary" onClick={this.handleInGameButton}> Join </Button>
-                        <br />
-                        <button id={`cancelButton`} onClick={this.handleCancelButton}>Cancel</button>
-                        {
-                            this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
-                        }
+                            <Button id="inGameButton" variant="primary" onClick={this.handleInGameButton}> Join </Button>
+                            <br />
+                            <button id={`cancelButton`} onClick={this.handleCancelButton}>Cancel</button>
+                            {
+                                this.state.listIdGames.map((game, i) => <CardComponent key={game.id} idPlayer={this.state._id} idRoom={game.id} actualGame={this.state.actualGame} />)
+                            }
                         </>
                     }
-                    <br/><br/><br/>
+                    <br /><br /><br />
                     <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
                 </div>
             </React.Fragment>
         );
     }
+}
+
+function calculateTotalScore(scoreInGame) {
+    var totalScore = 0;
+    for (let key in scoreInGame) {
+        if (key !== "wolf") {
+            totalScore += scoreInGame[key];
+        }
+    };
+    return totalScore;
 }
 
 export default PlayerHomePage;
