@@ -42,7 +42,7 @@ class AdminGamePage extends Component {
                 listAllPlayers.push({
                     _id: doc.id,
                     name: doc.data().name,
-                    score: doc.data().score
+                    score: doc.data().scoreInGame[this.state.nameGameRoom.toLowerCase()],
                 });
             });
 
@@ -74,7 +74,7 @@ class AdminGamePage extends Component {
         alert("Game ended!");
 
         const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
-        onSnapshot(q, (querySnapshot) => {
+        onSnapshot(q, async (querySnapshot) => {
             querySnapshot.forEach(async (doc) => {
                 await updateDoc(doc.ref, {
                     stateInGame: "",

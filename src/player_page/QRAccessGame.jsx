@@ -45,7 +45,7 @@ class QRAccessGame extends Component {
         //     alert("This game has already started");	
         //     return;
         // }
-        const listPlayersInRoom = gameRoomSnap.data().listPlayers;
+        var listPlayersInRoom = gameRoomSnap.data().listPlayers;
         if (listPlayersInRoom.length === gameRoomSnap.data().maxPlayers) {
             // van bi bug ////////////////
             alert("This game is full");
@@ -53,9 +53,6 @@ class QRAccessGame extends Component {
         }
         if (listPlayersInRoom.indexOf(this.state.idPlayer) === -1 && playerSnap.data().gameRoom === null) {
             listPlayersInRoom.push(this.state.idPlayer);
-            await updateDoc(gameRoomRef, {
-                listPlayers: listPlayersInRoom
-            });
             await updateDoc(playerRef, {
                 gameRoom: {
                     id: this.state.idRoom,
@@ -63,6 +60,10 @@ class QRAccessGame extends Component {
                 },
                 stateInGame: "Loading"
             }); 
+            await updateDoc(gameRoomRef, {
+                listPlayers: listPlayersInRoom
+            });
+            
         } 
     }
 

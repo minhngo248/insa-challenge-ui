@@ -14,13 +14,16 @@ class CardComponent extends Component {
             location: '',
             nbPlayerIn: 0,
             maxPlayers: 0,
-            linkImg: ''
+            linkImg: '',
+            score: 0
         };
     }
 
     componentDidMount() {
         const gameRoomRef = doc(db, "gamerooms", this.state.idRoom);
+        var nameRoom = "";
         onSnapshot(gameRoomRef, (doc) => {
+            nameRoom = doc.data().name.toLowerCase();
             this.setState({
                 nameRoom: doc.data().name,
                 location: doc.data().location,
@@ -29,6 +32,14 @@ class CardComponent extends Component {
                 linkImg: doc.data().linkImg
             });
         });
+        const playerRef = doc(db, "players", this.state.idPlayer);
+        onSnapshot(playerRef, (doc) => {
+            // console.log(this.state.nameRoom);
+            this.setState({
+                score: doc.data().scoreInGame[nameRoom]
+            });
+        });
+
         if (this.state.actualGame === null) return;
         if (this.state.actualGame.id === this.state.idRoom) {
             document.getElementById(`outRoomButton${this.state.idRoom}`).style.display = "block";
@@ -68,6 +79,9 @@ class CardComponent extends Component {
                             <span>Location: {this.state.location}</span><br />
                             <span>Player in this room: {this.state.nbPlayerIn}</span><br />
                             <span>Max players: {this.state.maxPlayers}</span><br />
+                            {(this.state.score !== 0 && this.state.score !== undefined) &&
+                                <span>Score: {this.state.score}</span>
+                            }
                         </Card.Text>
                     </Card.Body>
                 </Card>

@@ -1,14 +1,12 @@
 import React, { Component } from 'react';
-import { doc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import db from '../firebase';
 
 class PlayerLoadingPage extends Component {
     constructor(props) {
         super(props);
-        const params = new URLSearchParams(this.props.location.search);
-        const idPlayer = params.get("idAd");
         this.state = {
-            _id: idPlayer,
+            _id: "",
             name: "",
             score: 0,
             isAuthenticated: false,
@@ -17,62 +15,28 @@ class PlayerLoadingPage extends Component {
         };
     }
 
-    componentDidMount() {
-        const playerRef = doc(db, "players", this.state._id);
-        onSnapshot(playerRef, (doc) => {
+    async componentDidMount() {
+        const params = new URLSearchParams(this.props.location.search);
+        const idPlayer = params.get("idAd");
+        const playerRef = doc(db, "players", idPlayer);
+        onSnapshot(playerRef, async (doc) => {
             this.setState({
+                _id: doc.id,
                 name: doc.data().name,
                 score: doc.data().score,
                 isAuthenticated: doc.data().online,
                 stateInGame: doc.data().stateInGame,
                 actualGame: doc.data().gameRoom
             });
-            if (doc.data().stateInGame === "" || doc.data().stateInGame === "Playing") {
+
+            if (doc.data().stateInGame === "") {
                 window.location = `/player-page?id=${doc.id}`;
+            } else if (doc.data().stateInGame === "Playing") {
+                window.location = `/player-ingame-page?id=${doc.id}`;
             } else if (doc.data().stateInGame === "Playing wolf") {
                 window.location = `/player-wolf-page?id=${doc.id}&idGr=KCx0sRAZpccfwWhjK0ih`;
             }
         });
-    }
-
-    handleBack = async () => {
-        const playerRef = doc(db, "players", this.state._id);
-        const playerSnap = await getDoc(playerRef);
-        if (playerSnap.data().gameRoom !== null) {
-            const gameRoomRef = doc(db, "gamerooms", playerSnap.data().gameRoom.id);
-            const gameRoomSnap = await getDoc(gameRoomRef);
-            var listPlayersInRoom = gameRoomSnap.data().listPlayers;
-            listPlayersInRoom = listPlayersInRoom.filter(playerId => playerId !== playerSnap.id);
-            await updateDoc(gameRoomRef, {
-                listPlayers: listPlayersInRoom
-            });
-            await updateDoc(playerRef, {
-                gameRoom: null,
-                stateInGame: ""
-            });
-        }
-    }
-
-    handleLogOut = async () => {
-        const playerRef = doc(db, "players", this.state._id);
-        const playerSnap = await getDoc(playerRef);
-        if (playerSnap.data().gameRoom !== null) {
-            const gameRoomRef = doc(db, "gamerooms", playerSnap.data().gameRoom.id);
-            const gameRoomSnap = await getDoc(gameRoomRef);
-            var listPlayersInRoom = gameRoomSnap.data().listPlayers;
-            listPlayersInRoom = listPlayersInRoom.filter(playerId => playerId !== playerSnap.id);
-            await updateDoc(gameRoomRef, {
-                listPlayers: listPlayersInRoom
-            });
-            await updateDoc(playerRef, {
-                gameRoom: null
-            });
-        }
-        // Set the "online" field of the current player to false
-        await updateDoc(playerRef, {
-            online: false
-        });
-        window.location = '/';
     }
 
     render() {
@@ -81,15 +45,10 @@ class PlayerLoadingPage extends Component {
             <>
                 <div id="main">
                     <h1>Hello {this.state.name}</h1>
-                    <p>
-                        <span>Your score: {this.state.score}</span><br />
-                    </p>
                     <h1>Game room: {this.state.actualGame.name}</h1>
                     <h2 className="Loading">
                         Waiting for all players to join...
                     </h2>
-                    <button id="backButton" onClick={this.handleBack}>Back</button>
-                    <button id="logOutButton" onClick={this.handleLogOut}>Log out</button>
                 </div>
             </>
         )
