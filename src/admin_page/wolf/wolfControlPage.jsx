@@ -24,7 +24,7 @@ class WolfControlPage extends Component {
 
     async componentDidMount() {
         const adminRef = doc(db, "admins", this.state.idAdmin);
-        onSnapshot(adminRef, (doc) => {
+        onSnapshot(adminRef, async (doc) => {
             this.setState({
                 nameGameRoom: doc.data().gameRoom.name,
                 isAuthenticated: doc.data().online
@@ -32,7 +32,7 @@ class WolfControlPage extends Component {
         });
 
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
-        onSnapshot(gameRoomRef, (doc) => {
+        onSnapshot(gameRoomRef, async (doc) => {
             this.setState({
                 status: doc.data().status,
                 round: doc.data().round
@@ -40,7 +40,7 @@ class WolfControlPage extends Component {
         });
 
         const queryWord = query(collection(db, "wordlists"), where("round", "==", this.state.round));
-        onSnapshot(queryWord, (querySnapshot) => {
+        onSnapshot(queryWord, async (querySnapshot) => {
             querySnapshot.forEach((doc) => {
                 this.setState({
                     wordlists: doc.data().wordlists
@@ -74,16 +74,7 @@ class WolfControlPage extends Component {
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
         await updateDoc(gameRoomRef, {
             status: "Started",
-            limScore: -1
-        });
-        const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
-        onSnapshot(q, (querySnapshot) => {
-            querySnapshot.forEach(async (doc) => {
-                await updateDoc(doc.ref, {
-                    vaccinations: 0,
-                    infections: 0
-                });
-            });
+            keyword: randomKeyword(this.state.wordlists)
         });
     }
 
@@ -160,7 +151,6 @@ class WolfControlPage extends Component {
 
     handleLogOut = async () => {
         const adminRef = doc(db, "admins", this.state.idAdmin);
-        // set online to false
         await updateDoc(adminRef, {
             online: false
         });
@@ -242,11 +232,14 @@ function initScore(listPlayers) {
 function calculateTotalScore(scoreInGame) {
     var totalScore = 0;
     for (let key in scoreInGame) {
-        //if (key !== "wolf") {
         totalScore += scoreInGame[key];
-        //}
     };
     return totalScore;
+}
+
+function randomKeyword(listwords) {
+    const index = Math.floor(Math.random() * listwords.length);
+    return listwords[index];
 }
 
 export default WolfControlPage;

@@ -29,7 +29,7 @@ class PlayerWolfPage extends Component {
 
     componentDidMount() {
         const playerRef = doc(db, "players", this.state._id);
-        onSnapshot(playerRef, (doc) => {
+        onSnapshot(playerRef, async (doc) => {
             if (doc.data().stateInGame === "") {
                 alert(`Congratulations! \nYou gained ${this.state.score} points in this game!`);
                 window.location = `/player-page?id=${doc.id}`;
@@ -39,7 +39,7 @@ class PlayerWolfPage extends Component {
                     class: doc.data().class,
                     tel: doc.data().tel_number,
                     score: doc.data().score,
-                    stateInGame: doc.data().stateInGame,
+                    stateInGame: doc.data().stateInGame["wolf"],
                     meetHistory: doc.data().meetHistory,
                     isWolf: doc.data().isWolf
                 });
@@ -61,7 +61,7 @@ class PlayerWolfPage extends Component {
         const q = doc(db, "wordlists", where("round", "==", this.state.round));
         onSnapshot(q, (doc) => {
             this.setState({
-                wordlist: doc.data().wordlist
+                wordlist: doc.data().list
             });
         });
     }
@@ -86,6 +86,25 @@ class PlayerWolfPage extends Component {
         this.setState({
             showQRScanner: false
         });
+    }
+
+    handleSubmitWordButton = async () => {
+        const radios = document.getElementsByName(`radio-${this.state.keyword}`);
+        let selectedValue = "";
+        for (let i = 0; i < radios.length; i++) {
+            if (radios[i].checked) {
+                selectedValue = radios[i].value;
+                break;
+            }
+        }
+        if (selectedValue === this.state.keyword) {
+            alert("Correct! You gained 5 points!");
+            const playerRef = doc(db, "players", this.state._id);
+            await playerRef.update({
+                "score.wolf": this.state.score + 5
+            });
+        }
+        document.getElementById("submitWordButton").disabled = true;
     }
 
     render() {
@@ -133,7 +152,20 @@ class PlayerWolfPage extends Component {
                         <div id="keyword">
                             <h3>Keyword: </h3>
                             <p>{this.state.keyword}</p>
-                        </div> : null
+                        </div> :
+                        <>
+                            <ul>
+                                {this.state.wordlist.map((item, index) => {
+                                    return (
+                                        <li key={index}>
+                                            <input type="radio" id={`radio-${item}`} name={`radio-${item}`} value={item} />
+                                        </li>
+                                    );
+                                })
+                                }
+                            </ul>
+                            <button id="submitWordButton" onClick={this.handleSubmitWordButton}>Submit</button>
+                        </>
                     }
 
                     <div id="meeting-history">
