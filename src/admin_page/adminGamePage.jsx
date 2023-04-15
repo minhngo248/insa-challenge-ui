@@ -183,9 +183,7 @@ class AdminGamePage extends Component {
 function calculateTotalScore(scoreInGame) {
     var totalScore = 0;
     for (let key in scoreInGame) {
-        //if (key !== "wolf") {
         totalScore += scoreInGame[key];
-        //}
     };
     return totalScore;
 }

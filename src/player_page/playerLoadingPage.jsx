@@ -5,8 +5,10 @@ import db from '../firebase';
 class PlayerLoadingPage extends Component {
     constructor(props) {
         super(props);
+        const params = new URLSearchParams(this.props.location.search);
+        const idPlayer = params.get("idAd");
         this.state = {
-            _id: "",
+            _id: idPlayer,
             name: "",
             score: 0,
             isAuthenticated: false,
@@ -16,24 +18,22 @@ class PlayerLoadingPage extends Component {
     }
 
     componentDidMount() {
-        const params = new URLSearchParams(this.props.location.search);
-        const idPlayer = params.get("idAd");
-        const playerRef = doc(db, "players", idPlayer);
-        onSnapshot(playerRef, async (doc) => {
+        const playerRef = doc(db, "players", this.state._id);
+        onSnapshot(playerRef, (doc) => {
             this.setState({
-                _id: idPlayer,
                 name: doc.data().name,
                 score: doc.data().score,
                 isAuthenticated: doc.data().online,
                 stateInGame: doc.data().stateInGame,
                 actualGame: doc.data().gameRoom
             });
-            if (doc.stateInGame === "") {
-                window.location = `/player-page?id=${idPlayer}`;
-            } else if (doc.stateInGame === "Playing") {
-                window.location = `/player-ingame-page?id=${idPlayer}`;
-            } else if (doc.stateInGame === "Playing wolf") {
-                window.location = `/player-wolf-page?id=${idPlayer}&idGr=KCx0sRAZpccfwWhjK0ih`;
+
+            if (doc.data().stateInGame === "") {
+                window.location = `/player-page?id=${this.state._id}`;
+            } else if (doc.data().stateInGame === "Playing") {
+                window.location = `/player-ingame-page?id=${this.state._id}`;
+            } else if (doc.data().stateInGame === "Playing wolf") {
+                window.location = `/player-wolf-page?id=${this.state._id}&idGr=KCx0sRAZpccfwWhjK0ih`;
             }
         });
     }
@@ -44,7 +44,7 @@ class PlayerLoadingPage extends Component {
             <>
                 <div id="main">
                     <h1>Hello {this.state.name}</h1>
-                    <h1>Game room: {this.state.actualGame.name}</h1>
+                    <h1>Game room: {this.state.actualGame["name"]}</h1>
                     <h2 className="Loading">
                         Waiting for all players to join...
                     </h2>

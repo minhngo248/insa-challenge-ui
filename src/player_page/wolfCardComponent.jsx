@@ -40,7 +40,7 @@ class WolfCardComponent extends Component {
             return;
         }
         document.getElementById(`inputCode${this.state.idRoom}`).value = "";
-        alert(`You joined the game room ${this.state.nameRoom}`);
+        // alert(`You joined the game room ${this.state.nameRoom}`);
 
         // charge data for this component
         const playerRef = doc(db, "players", this.state.idPlayer);
@@ -66,6 +66,7 @@ class WolfCardComponent extends Component {
             });
             
             console.log("update game room");
+            alert(`You joined the game room ${this.state.nameRoom}`);
         }
     }
 
