@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Button } from 'react-bootstrap';
 import QRCode from "react-qr-code";
 import { doc, onSnapshot, where, query, collection, getDoc, updateDoc } from "firebase/firestore";
 import db from '../firebase';
@@ -57,6 +58,10 @@ class PlayerWolfPage extends Component {
                 keyword: doc.data().keyword
             });
 
+            if (doc.data().round !== this.state.round && doc.data().round === 2) {
+                document.getElementById("submitWordButton").disabled = false;
+            }
+
             const queryWord = query(collection(db, "wordlists"), where("round", "==", doc.data().round));
             onSnapshot(queryWord, (querySnapshot) => {
                 querySnapshot.forEach((docWord) => {
@@ -68,15 +73,27 @@ class PlayerWolfPage extends Component {
         });
     }
 
-    handleMeetButton = () => {
-        document.getElementById("meetButton").disabled = true;
-        document.getElementById("cancelButton").disabled = false;
+    handleShowImportantInfo = () => {
+        document.getElementById("isWolf").style.display = "block";
+        if (!this.state.isWolf) {
+            document.getElementById("keyword").style.display = "block";
+        }
+        document.getElementById("list-word").style.display = "block";
+        document.getElementById("meeting-history").style.display = "block";
+    }
+
+    handleHideImportantInfo = () => {
         document.getElementById("isWolf").style.display = "none";
         if (!this.state.isWolf) {
             document.getElementById("keyword").style.display = "none";    
         }
         document.getElementById("list-word").style.display = "none";
         document.getElementById("meeting-history").style.display = "none";
+    }
+
+    handleMeetButton = () => {
+        document.getElementById("meetButton").disabled = true;
+        document.getElementById("cancelButton").disabled = false;
         this.setState({
             showQRScanner: true
         });
@@ -85,12 +102,6 @@ class PlayerWolfPage extends Component {
     handleCancelButton = () => {
         document.getElementById("meetButton").disabled = false;
         document.getElementById("cancelButton").disabled = true;
-        document.getElementById("isWolf").style.display = "block";
-        if (!this.state.isWolf) {
-            document.getElementById("keyword").style.display = "block";    
-        }
-        document.getElementById("list-word").style.display = "block";
-        document.getElementById("meeting-history").style.display = "block";
         this.setState({
             showQRScanner: false
         });
@@ -99,11 +110,15 @@ class PlayerWolfPage extends Component {
     handleSubmitWordButton = async () => {
         const radios = document.getElementsByName("radios");
         let selectedValue = "";
-        for (let i = 0; i < radios.length; i++) {
+        let i = 0;
+        for (i = 0; i < radios.length; i++) {
             if (radios[i].checked) {
                 selectedValue = radios[i].value;
                 break;
             }
+        }
+        if (i > 0) {
+            document.getElementById("submitWordButton").disabled = true;
         }
         if (selectedValue === this.state.keyword) {
             const playerRef = doc(db, "players", this.state._id);
@@ -116,7 +131,7 @@ class PlayerWolfPage extends Component {
         } else {
             alert("Wrong! You gained 0 points!");
         }
-        document.getElementById("submitWordButton").disabled = true;
+        
     }
 
     render() {
@@ -161,7 +176,7 @@ class PlayerWolfPage extends Component {
                             );
                         })}
                     </div>
-                    <button id="submitWordButton" onClick={this.handleSubmitWordButton}>Submit</button>
+                    <button id="submitWordButton" onClick={this.handleSubmitWordButton} disabled={false}>Submit</button>
                     </div> : 
                     <div id="list-word">
                     <h3>List of words</h3>
@@ -204,6 +219,11 @@ class PlayerWolfPage extends Component {
                         </ul>
                     </div>
                     <br /><br />
+
+                    <Button id="showImportantInfoButton" onClick={this.handleShowImportantInfo}>Show important info</Button>
+                    <Button id="hideImportantInfoButton" onClick={this.handleHideImportantInfo}>Hide important info</Button>
+                    <br /><br />
+
 
                     <button id="meetButton" onClick={this.handleMeetButton}>Meet someone</button>
                     <button id="cancelButton" onClick={this.handleCancelButton}>Cancel</button>

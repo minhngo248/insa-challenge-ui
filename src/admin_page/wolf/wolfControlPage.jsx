@@ -98,6 +98,7 @@ class WolfControlPage extends Component {
                 });
             });
         });
+        document.getElementById("nextRound").disabled = true;
     }
 
     async handleContinue() {

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import db from '../firebase';
 
 class PlayerLoadingPage extends Component {
@@ -20,6 +20,14 @@ class PlayerLoadingPage extends Component {
     componentDidMount() {
         const playerRef = doc(db, "players", this.state._id);
         onSnapshot(playerRef, (doc) => {
+            if (doc.data().stateInGame === "") {
+                window.location = `/player-page?id=${this.state._id}`;
+            } else if (doc.data().stateInGame === "Playing") {
+                window.location = `/player-ingame-page?id=${this.state._id}`;
+            } else if (doc.data().stateInGame === "Playing wolf") {
+                window.location = `/player-wolf-page?id=${this.state._id}&idGr=KCx0sRAZpccfwWhjK0ih`;
+            }
+
             this.setState({
                 name: doc.data().name,
                 score: doc.data().score,
@@ -28,13 +36,7 @@ class PlayerLoadingPage extends Component {
                 actualGame: doc.data().gameRoom
             });
 
-            if (doc.data().stateInGame === "") {
-                window.location = `/player-page?id=${this.state._id}`;
-            } else if (doc.data().stateInGame === "Playing") {
-                window.location = `/player-ingame-page?id=${this.state._id}`;
-            } else if (doc.data().stateInGame === "Playing wolf") {
-                window.location = `/player-wolf-page?id=${this.state._id}&idGr=KCx0sRAZpccfwWhjK0ih`;
-            }
+            
         });
     }
 

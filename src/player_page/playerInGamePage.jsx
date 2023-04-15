@@ -21,7 +21,7 @@ class PlayerInGamePage extends Component {
         const playerRef = doc(db, "players", this.state._id);
         // var score = this.state.score;
         // var game = this.state.actualGame;
-        onSnapshot(playerRef, async (doc) => {
+        onSnapshot(playerRef, (doc) => {
             if (doc.data().stateInGame === "") {
                 alert(`Congratulations! \nYou gained ${this.state.score} points in this game!`);
                 window.location = `/player-page?id=${doc.id}`;
