@@ -22,9 +22,9 @@ class WolfControlPage extends Component {
         }
     }
 
-    async componentDidMount() {
+    componentDidMount() {
         const adminRef = doc(db, "admins", this.state.idAdmin);
-        onSnapshot(adminRef, (doc) => {
+        onSnapshot(adminRef, async (doc) => {
             this.setState({
                 nameGameRoom: doc.data().gameRoom.name,
                 isAuthenticated: doc.data().online
@@ -37,13 +37,13 @@ class WolfControlPage extends Component {
                 status: doc.data().status,
                 round: doc.data().round
             });
-        });
 
-        const queryWord = query(collection(db, "wordlists"), where("round", "==", this.state.round));
-        onSnapshot(queryWord, (querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-                this.setState({
-                    wordlists: doc.data().wordlists
+            const queryWord = query(collection(db, "wordlists"), where("round", "==", doc.data().round));
+            onSnapshot(queryWord, (querySnapshot) => {
+                querySnapshot.forEach((docWord) => {
+                    this.setState({
+                        wordlists: docWord.data().list
+                    });
                 });
             });
         });
@@ -66,6 +66,7 @@ class WolfControlPage extends Component {
         });
     }
 
+
     async handleStartGame() {
         document.getElementById("startGame").disabled = true;
         document.getElementById("endGame").disabled = false;
@@ -74,16 +75,7 @@ class WolfControlPage extends Component {
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
         await updateDoc(gameRoomRef, {
             status: "Started",
-            limScore: -1
-        });
-        const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
-        onSnapshot(q, (querySnapshot) => {
-            querySnapshot.forEach(async (doc) => {
-                await updateDoc(doc.ref, {
-                    vaccinations: 0,
-                    infections: 0
-                });
-            });
+            keyword: randomKeyword(this.state.wordlists)
         });
     }
 
@@ -160,7 +152,6 @@ class WolfControlPage extends Component {
 
     handleLogOut = async () => {
         const adminRef = doc(db, "admins", this.state.idAdmin);
-        // set online to false
         await updateDoc(adminRef, {
             online: false
         });
@@ -242,11 +233,14 @@ function initScore(listPlayers) {
 function calculateTotalScore(scoreInGame) {
     var totalScore = 0;
     for (let key in scoreInGame) {
-        //if (key !== "wolf") {
         totalScore += scoreInGame[key];
-        //}
     };
     return totalScore;
+}
+
+function randomKeyword(listwords) {
+    const index = Math.floor(Math.random() * listwords.length);
+    return listwords[index];
 }
 
 export default WolfControlPage;

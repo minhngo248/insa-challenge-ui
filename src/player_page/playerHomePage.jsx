@@ -26,7 +26,7 @@ class PlayerHomePage extends Component {
         };
     }
 
-    async componentDidMount() {
+    componentDidMount() {
         const params = new URLSearchParams(this.props.location.search);
         const idPlayer = params.get("id");
 

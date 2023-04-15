@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import QRCode from "react-qr-code";
-import { doc, onSnapshot, where } from "firebase/firestore";
+import { doc, onSnapshot, where, query, collection, getDoc } from "firebase/firestore";
 import db from '../firebase';
 import QRMeetComponent from './QRMeetComponent';
 
@@ -22,7 +22,7 @@ class PlayerWolfPage extends Component {
             isWolf: false,
             showQRScanner: false,
             round: 0,
-            wordlist: [],
+            wordlists: [],
             keyword: ""
         };
     }
@@ -39,7 +39,7 @@ class PlayerWolfPage extends Component {
                     class: doc.data().class,
                     tel: doc.data().tel_number,
                     score: doc.data().score,
-                    stateInGame: doc.data().stateInGame,
+                    stateInGame: doc.data().stateInGame["wolf"],
                     meetHistory: doc.data().meetHistory,
                     isWolf: doc.data().isWolf
                 });
@@ -50,18 +50,20 @@ class PlayerWolfPage extends Component {
             }
         });
 
-        const gameRoomRef = doc(db, "gameRooms", this.state.idGameRoom);
+        const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
         onSnapshot(gameRoomRef, (doc) => {
             this.setState({
                 round: doc.data().round,
                 keyword: doc.data().keyword
             });
-        });
 
-        const q = doc(db, "wordlists", where("round", "==", this.state.round));
-        onSnapshot(q, (doc) => {
-            this.setState({
-                wordlist: doc.data().wordlist
+            const queryWord = query(collection(db, "wordlists"), where("round", "==", doc.data().round));
+            onSnapshot(queryWord, (querySnapshot) => {
+                querySnapshot.forEach((docWord) => {
+                    this.setState({
+                        wordlists: docWord.data().list
+                    });
+                });
             });
         });
     }
@@ -70,7 +72,9 @@ class PlayerWolfPage extends Component {
         document.getElementById("meetButton").disabled = true;
         document.getElementById("cancelButton").disabled = false;
         document.getElementById("isWolf").style.display = "none";
-        document.getElementById("list-word").style.display = "none";
+        if (!this.state.isWolf) {
+            document.getElementById("list-word").style.display = "none";
+        }
         document.getElementById("meeting-history").style.display = "none";
         this.setState({
             showQRScanner: true
@@ -81,11 +85,34 @@ class PlayerWolfPage extends Component {
         document.getElementById("meetButton").disabled = false;
         document.getElementById("cancelButton").disabled = true;
         document.getElementById("isWolf").style.display = "block";
-        document.getElementById("list-word").style.display = "block";
+        if (!this.state.isWolf) {
+            document.getElementById("list-word").style.display = "block";
+        }
         document.getElementById("meeting-history").style.display = "block";
         this.setState({
             showQRScanner: false
         });
+    }
+
+    handleSubmitWordButton = async () => {
+        const radios = document.getElementsByName("radios");
+        let selectedValue = "";
+        for (let i = 0; i < radios.length; i++) {
+            if (radios[i].checked) {
+                selectedValue = radios[i].value;
+                break;
+            }
+        }
+        if (selectedValue === this.state.keyword) {
+            const playerRef = doc(db, "players", this.state._id);
+            const playerSnap = await getDoc(playerRef);
+            var scoreWolf = playerSnap.data().scoreInGame.wolf;
+            await playerRef.update({
+                "scoreInGame.wolf": scoreWolf + 5
+            });
+            alert("Correct! You gained 5 points!");
+        }
+        document.getElementById("submitWordButton").disabled = true;
     }
 
     render() {
@@ -115,27 +142,55 @@ class PlayerWolfPage extends Component {
                     </div>
 
                     <br /><br />
-                    <div id="list-word">
-                        <h3>List of words: </h3>
-                        <ul>
-                            {this.state.wordlist.map((item, index) => {
-                                return (
-                                    <li key={index}>
-                                        {item}
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
+                    {this.state.isWolf ? null :
+                        <div id="list-word">
+                            <h3>List of words: </h3>
+                            <ul>
+                                {this.state.wordlists.map((item, index) => {
+                                    return (
+                                        <li key={index}>
+                                            {item}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    }
+
+                    
 
                     <br /><br />
                     {this.state.isWolf ?
-                        <div id="keyword">
-                            <h3>Keyword: </h3>
-                            <p>{this.state.keyword}</p>
-                        </div> : null
+                    <>
+                    <div>
+                        {this.state.wordlists.map((item, index) => {
+                            return (
+                                <>
+                                    <input type="radio" name={"radios"} value={item} /> {item}
+                                    <br/>
+                                </>
+                            );
+                        })}
+                    </div>
+                    <button id="submitWordButton" onClick={this.handleSubmitWordButton}>Submit</button>
+                    </> : 
+                    <ul>
+                        {this.state.wordlists.map((item, index) => {
+                            return (
+                                <li>{item}</li>
+                            );
+                        })}
+                    </ul>
                     }
+                    <br /><br />
 
+
+                    {this.state.isWolf ? null :
+                    <div id="keyword">
+                        <h3>Keyword: </h3>
+                        <p>{this.state.keyword}</p>
+                    </div>
+                    }
                     <div id="meeting-history">
                         <h3>Meeting history: </h3>
                         <ul>
