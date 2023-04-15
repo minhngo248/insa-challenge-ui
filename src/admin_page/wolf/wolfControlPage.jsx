@@ -75,7 +75,8 @@ class WolfControlPage extends Component {
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
         await updateDoc(gameRoomRef, {
             status: "Started",
-            keyword: randomKeyword(this.state.wordlists)
+            keyword: randomKeyword(this.state.wordlists),
+            round: 1
         });
     }
 
@@ -83,6 +84,19 @@ class WolfControlPage extends Component {
         const gameRoomRef = doc(db, "gamerooms", this.state.idGameRoom);
         await updateDoc(gameRoomRef, {
             round: 2
+        });
+
+        await updateDoc(gameRoomRef, {
+            keyword: randomKeyword(this.state.wordlists)
+        });
+
+        const q = query(collection(db, "players"), where("gameRoom.id", "==", this.state.idGameRoom));
+        onSnapshot(q, (querySnapshot) => {
+            querySnapshot.forEach(async (doc) => {
+                await updateDoc(doc.ref, {
+                    meetHistory: []
+                });
+            });
         });
     }
 
@@ -124,7 +138,6 @@ class WolfControlPage extends Component {
     async handleUpdateScore(player) {
         const score = document.getElementById(`score-${player._id}`).value;
         if (score === "") return;
-        // const oldScore = player.scoreInGame;
         player.scoreInGame = parseInt(score);
         const playerRef = doc(db, "players", player._id);
         await updateDoc(playerRef, {
@@ -134,15 +147,9 @@ class WolfControlPage extends Component {
 
     handleEnterScore = async () => {
         for (let i = 0; i < this.state.listPlayers.length; i++) {
-            const score = document.getElementById(`score1-${this.state.listPlayers[i]._id}`).value;
-            if (score === "") continue;
             const playerRef = doc(db, "players", this.state.listPlayers[i]._id);
             const playerSnap = await getDoc(playerRef);
             var scoreInGame = playerSnap.data().scoreInGame;
-            scoreInGame["wolf"] = parseInt(score);
-            await updateDoc(playerRef, {
-                scoreInGame: scoreInGame
-            });
 
             await updateDoc(playerRef, {
                 score: calculateTotalScore(scoreInGame)

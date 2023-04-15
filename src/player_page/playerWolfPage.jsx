@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import QRCode from "react-qr-code";
-import { doc, onSnapshot, where, query, collection, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, where, query, collection, getDoc, updateDoc } from "firebase/firestore";
 import db from '../firebase';
 import QRMeetComponent from './QRMeetComponent';
 
@@ -73,8 +73,9 @@ class PlayerWolfPage extends Component {
         document.getElementById("cancelButton").disabled = false;
         document.getElementById("isWolf").style.display = "none";
         if (!this.state.isWolf) {
-            document.getElementById("list-word").style.display = "none";
+            document.getElementById("keyword").style.display = "none";    
         }
+        document.getElementById("list-word").style.display = "none";
         document.getElementById("meeting-history").style.display = "none";
         this.setState({
             showQRScanner: true
@@ -86,8 +87,9 @@ class PlayerWolfPage extends Component {
         document.getElementById("cancelButton").disabled = true;
         document.getElementById("isWolf").style.display = "block";
         if (!this.state.isWolf) {
-            document.getElementById("list-word").style.display = "block";
+            document.getElementById("keyword").style.display = "block";    
         }
+        document.getElementById("list-word").style.display = "block";
         document.getElementById("meeting-history").style.display = "block";
         this.setState({
             showQRScanner: false
@@ -107,10 +109,12 @@ class PlayerWolfPage extends Component {
             const playerRef = doc(db, "players", this.state._id);
             const playerSnap = await getDoc(playerRef);
             var scoreWolf = playerSnap.data().scoreInGame.wolf;
-            await playerRef.update({
+            await updateDoc(playerRef, {
                 "scoreInGame.wolf": scoreWolf + 5
             });
             alert("Correct! You gained 5 points!");
+        } else {
+            alert("Wrong! You gained 0 points!");
         }
         document.getElementById("submitWordButton").disabled = true;
     }
@@ -141,27 +145,12 @@ class PlayerWolfPage extends Component {
                         </div>
                     </div>
 
-                    <br /><br />
-                    {this.state.isWolf ? null :
-                        <div id="list-word">
-                            <h3>List of words: </h3>
-                            <ul>
-                                {this.state.wordlists.map((item, index) => {
-                                    return (
-                                        <li key={index}>
-                                            {item}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
-                    }
-
                     
 
                     <br /><br />
                     {this.state.isWolf ?
-                    <>
+                    <div id="list-word">
+                    <h3>List of words to choose</h3>
                     <div>
                         {this.state.wordlists.map((item, index) => {
                             return (
@@ -173,7 +162,9 @@ class PlayerWolfPage extends Component {
                         })}
                     </div>
                     <button id="submitWordButton" onClick={this.handleSubmitWordButton}>Submit</button>
-                    </> : 
+                    </div> : 
+                    <div id="list-word">
+                    <h3>List of words</h3>
                     <ul>
                         {this.state.wordlists.map((item, index) => {
                             return (
@@ -181,6 +172,7 @@ class PlayerWolfPage extends Component {
                             );
                         })}
                     </ul>
+                    </div>
                     }
                     <br /><br />
 
